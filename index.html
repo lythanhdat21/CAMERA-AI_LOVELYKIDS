@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#171b22">
+<meta name="description" content="Mã nhãn và địa chỉ IP thiết bị trên mặt bằng – dự án CAMERA-AI LovelyKids.">
+<title>Mã nhãn &amp; IP thiết bị – CAMERA AI LovelyKids</title>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<noscript><div class="nojs">Trang này cần bật JavaScript để hiển thị mặt bằng. Bản PDF:
+  <a href="tai-ve/Mat-bang-camera-ma-IP.pdf">camera</a> ·
+  <a href="tai-ve/Mat-bang-control-ma-thiet-bi.pdf">control</a> ·
+  <a href="tai-ve/Mat-bang-o-cam-tu-dien-ma-thiet-bi.pdf">ổ cắm &amp; tủ điện</a> ·
+  <a href="tai-ve/Mat-bang-TEL-DATA-ma-thiet-bi.pdf">TEL-DATA &amp; Wi-Fi</a>.</div></noscript>
+
+<header id="hdr"></header>
+
+<!-- Tổng quan -->
+<div id="v-tong-quan" class="view-pane" hidden>
+  <main id="ov"></main>
+  <footer>
+    <img data-logo alt="">
+    <span>Tài liệu dự án CAMERA-AI LovelyKids – gửi đối tác tham khảo.</span>
+    <span class="r">Nguồn: bảng mã/IP và 4 bộ mặt bằng ghi mã · tải bản gốc ở tab <b>Tải về</b></span>
+  </footer>
+</div>
+
+<!-- dùng chung cho 4 tab mặt bằng: Camera, Control, Ổ cắm & tủ điện, TEL-DATA & Wi-Fi -->
+<div id="v-mat-bang" class="view-pane plan-wrap" hidden>
+  <aside>
+    <h4>Mặt bằng</h4>
+    <div id="floors"></div>
+    <div class="lbl-demo" id="lbl-demo"></div>
+  </aside>
+  <section class="view">
+    <div class="bar-top">
+      <select class="floor-sel" id="floor-sel" aria-label="Chọn mặt bằng"></select>
+      <div class="crumb" id="crumb"></div>
+      <div class="count" id="count"></div>
+      <div class="how">Rê chuột: phóng to · Click: giữ 5 giây · Lăn chuột / kéo: xem bản vẽ</div>
+      <div class="tools">
+        <button class="btn" id="zo" type="button" title="Thu nhỏ" aria-label="Thu nhỏ">−</button>
+        <div class="zoomv" id="zv">100%</div>
+        <button class="btn" id="zi" type="button" title="Phóng to" aria-label="Phóng to">+</button>
+        <button class="btn" id="fit" type="button" title="Vừa màn hình" aria-label="Vừa màn hình"></button>
+        <a class="btn pri" id="pdf" download></a>
+      </div>
+    </div>
+    <div class="canvas" id="cv">
+      <div class="mini" id="mini" title="Bản đồ nhỏ – click để tới vị trí"></div>
+      <!-- 2 nút nổi bên phải: + chú giải, ⋮⋮⋮ hình thiết bị (dải ảnh) -->
+      <button class="lg-btn" id="lg-btn" type="button">+</button>
+      <button class="st-btn" id="st-btn" type="button"></button>
+      <div class="lgp" id="lgp" hidden></div>
+      <div class="strip stp" id="stp" hidden></div>
+      <div class="loc-chip" id="loc-chip" hidden></div>
+    </div>
+  </section>
+</div>
+
+<div id="v-tai-ve" class="view-pane" hidden><main id="dl"></main></div>
+<div id="v-luu-y" class="view-pane" hidden><main id="ly"></main></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
