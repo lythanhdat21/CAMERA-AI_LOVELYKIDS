@@ -720,7 +720,7 @@
      → mở khung bên phải (điện thoại: trượt lên từ cạnh dưới). Tủ không có IP; IP là của thiết bị trong tủ. */
   const TU = Object.fromEntries((D.tu_rack || []).map((t) => [t.ma, t]));
   const NHOM_TU = [["net", "Networking", "#34d1bc"], ["proc", "Processor", "#f2a11c"], ["acc", "Accessory", "#a897ff"],
-    ["phu", "Phụ kiện tủ", "#6b778a"]];
+    ["pa", "Âm thanh PA", "#ff7eb6"], ["phu", "Phụ kiện tủ", "#6b778a"]];
   const TU_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2.5" width="14" height="17" rx="1.5"/><path d="M8 7h8M8 11h8M8 15h8M7 19.5V22M17 19.5V22"/></svg>';
   var tuMo = null;
   function closeRack() { if (tuMo) { tuMo.remove(); tuMo = null; } }
