@@ -167,7 +167,7 @@
           <ul><li><i style="background:var(--code-a)"></i>Khu vực: T1 = Tầng 1</li>
             <li><i style="background:var(--code-b)"></i>Loại thiết bị theo ký hiệu bản vẽ</li>
             <li><i style="background:var(--code-c)"></i>Số thứ tự trong khu vực</li></ul></div>
-        <p class="note">Mọi thiết bị dùng chung cách ghi: <b>T1-CH01</b> = camera nhiệt (CH) số 01 ở Tầng 1; <b>T2-CT03</b> = công tắc số 03 ở Tầng 2. Mã loại camera: <b>CC</b> bán cầu AI · <b>CR</b> trụ · <b>CD</b> bán cầu 2MP · <b>CH</b> nhiệt · <b>CX</b> xoay (PTZ). Thiết bị ngoài camera hiện chỉ có mã nhãn.</p>
+        <p class="note">Mọi thiết bị dùng chung cách ghi: <b>T1-CH01</b> = camera nhiệt (CH) số 01 ở Tầng 1; <b>T2-SW03</b> = công tắc số 03 ở Tầng 2. Mã loại camera: <b>CC</b> bán cầu AI · <b>CR</b> trụ · <b>CD</b> bán cầu 2MP · <b>CH</b> nhiệt · <b>CX</b> xoay (PTZ). Thiết bị ngoài camera hiện chỉ có mã nhãn.</p>
       </div></div>
     </section>`;
   }
@@ -206,7 +206,7 @@
 
   /* ================= nội dung khung mặt bằng ================= */
   /* Dải ảnh thiết bị của trang: ảnh sản phẩm (camera, control) hoặc ô ký hiệu cắt từ bản vẽ A3 (g.ky_hieu),
-     mã chữ vàng, số lượng trên mặt bằng đang xem. Control: dải ảnh ghi mã bản vẽ (KG2…), nhãn ghi mã loại → "Nhãn: …-CT". */
+     mã chữ vàng, số lượng trên mặt bằng đang xem. Control: dải ảnh ghi mã bản vẽ (KG2…), nhãn ghi mã loại → "Nhãn: …-SW". */
   function renderStrip(el, plan) {
     el.innerHTML = `<div class="stp-h"><span>Hình thiết bị · ${esc(plan.khu_vuc)}</span>
       <em>Chọn hình để lọc, rồi bấm <b>×</b> để xem trên mặt bằng</em></div><div class="stp-row">` + plan.dai_anh.map((g) => `
