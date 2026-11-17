@@ -3,7 +3,7 @@
 Trang web tĩnh (HTML, CSS, JS) thay cho bộ PDF mặt bằng khi gửi đối tác. Không cần máy chủ hay cơ sở dữ liệu.
 
 - **Xem trên máy:** mở `index.html` bằng trình duyệt.
-- **Dữ liệu cập nhật:** 16/11/2026. Tổng 470 thiết bị, 503 nhãn trên 28 trang mặt bằng; dung lượng khoảng 28 MB.
+- **Dữ liệu cập nhật:** 17/11/2026. Tổng 470 thiết bị, 503 nhãn trên 28 trang mặt bằng; dung lượng khoảng 28 MB.
 - **Không sửa tay** các file trong thư mục này. Thư mục được tạo lại bằng
   `10_DOCS-SCRIPT/script/website/xuat_ban_website.py` (xem `10_DOCS-SCRIPT/docs/2026-11-16_11_…`).
 
@@ -37,10 +37,9 @@ Giữ file `.nojekyll`: file này báo GitHub Pages phục vụ nguyên các fil
 |---|---|
 | `…/#camera`, `#control`, `#ocam`, `#tel` | Tab mặt bằng |
 | `…/#camera/2` | Mặt bằng thứ 2 trong danh sách của tab |
-| `…/#ma=T1-CN5-01` | Đúng thiết bị đó, phóng to 5 giây |
+| `…/#ma=T1-CH01` | Đúng thiết bị đó, phóng to 5 giây |
 | `…/#tai-ve`, `#luu-y` | Tab Tải về, Lưu ý |
 
 ## Cập nhật
 
 Khi mã/IP hoặc bản vẽ thay đổi: chạy lại script trên. Thư mục này được tạo lại (giữ `.git`), rồi commit và push lên GitHub.
-# CAMERA-AI_LOVELYKIDS

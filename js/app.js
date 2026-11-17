@@ -13,7 +13,7 @@
    - Tải về: 7 file. Lưu ý: các điểm còn thiếu / chênh lệch / cần xác minh.
 
    Địa chỉ trang (gửi link cho đối tác):
-     #tong-quan · #camera · #camera/2 (mặt bằng thứ 2 trong danh sách) · #tai-ve · #luu-y · #ma=T1-CN5-01 (mở đúng thiết bị)
+     #tong-quan · #camera · #camera/2 (mặt bằng thứ 2 trong danh sách) · #tai-ve · #luu-y · #ma=T1-CH01 (mở đúng thiết bị)
    Phím tắt (máy tính): A / D – sang tab bên trái / bên phải; W / S – lên / xuống mặt bằng; đều chạy vòng.
    Tham số chụp ảnh kiểm tra: ?demo=phim&phim=D,S (giả lập nhấn phím) · ?demo=legend (mở chú giải) · ?demo=hinh (mở hình thiết bị)
    · ?demo=chon&chon=CN2,NG (đã chọn hình) · ?demo=loc&chon=CN2,NG (đã bấm ×, đang lọc) · ?demo=keo-hinh (giả lập kéo nút ⋮⋮⋮)
@@ -72,7 +72,7 @@
       <button class="s-btn" id="s-btn" type="button" aria-label="Tìm mã nhãn hoặc IP">${icon("search", 19)}</button>
       <div class="search">${icon("search", 17)}
         <input type="search" enterkeyhint="search" autocomplete="off" spellcheck="false" aria-label="Tìm mã nhãn hoặc IP"
-          placeholder="Tìm mã nhãn hoặc IP – ví dụ T1-CN5-01, 10.10.1.61"></div>
+          placeholder="Tìm mã nhãn hoặc IP – ví dụ T1-CH01, 10.10.1.61"></div>
     </div></div>
     <nav class="tabs" aria-label="Nội dung"><div class="tabs-in">
       ${TABS.map(([id, name, ic, cnt, dot]) => `<a class="tab${id === "tai-ve" ? " right" : ""}" href="#${id}" data-id="${id}">${icon(ic, 17)}${name}${
@@ -162,12 +162,12 @@
           .map(([b, t], k) => `<div class="step"><span class="n">${k + 1}</span><div><b>${b}</b> ${t}</div></div>`).join("")}
       </div>
       <div class="decode">
-        <div class="demo"><div class="lbl"><b>T1-CN5-01</b><span>10.10.1.61</span></div></div>
-        <div><div class="codeparts"><span class="a">T1</span>-<span class="b">CN5</span>-<span class="c">01</span></div>
+        <div class="demo"><div class="lbl"><b>T1-CH01</b><span>10.10.1.61</span></div></div>
+        <div><div class="codeparts"><span class="a">T1</span>-<span class="b">CH</span><span class="c">01</span></div>
           <ul><li><i style="background:var(--code-a)"></i>Khu vực: T1 = Tầng 1</li>
             <li><i style="background:var(--code-b)"></i>Loại thiết bị theo ký hiệu bản vẽ</li>
             <li><i style="background:var(--code-c)"></i>Số thứ tự trong khu vực</li></ul></div>
-        <p class="note">Thiết bị khác (control, ổ cắm, TEL-DATA) có mã 2 phần, ví dụ <b>T2-CT03</b> = công tắc số 03 ở Tầng 2, và hiện chỉ có mã nhãn.</p>
+        <p class="note">Mọi thiết bị dùng chung cách ghi: <b>T1-CH01</b> = camera nhiệt (CH) số 01 ở Tầng 1; <b>T2-CT03</b> = công tắc số 03 ở Tầng 2. Mã loại camera: <b>CC</b> bán cầu AI · <b>CR</b> trụ · <b>CD</b> bán cầu 2MP · <b>CH</b> nhiệt · <b>CX</b> xoay (PTZ). Thiết bị ngoài camera hiện chỉ có mã nhãn.</p>
       </div></div>
     </section>`;
   }
@@ -816,5 +816,5 @@
   if (demo === "phim") for (const k of (Q.get("phim") || "").split(",").filter(Boolean)) {
     document.dispatchEvent(new KeyboardEvent("keydown", { code: "Key" + k.toUpperCase(), key: k.toLowerCase(), bubbles: true }));
   }
-  if (Q.get("demo") === "search") { top.classList.add("tim"); input.value = Q.get("q") || "CN6-0"; renderDrop(); }
+  if (Q.get("demo") === "search") { top.classList.add("tim"); input.value = Q.get("q") || "CX0"; renderDrop(); }
 })();
