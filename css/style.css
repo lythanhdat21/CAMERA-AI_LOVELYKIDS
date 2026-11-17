@@ -446,3 +446,72 @@ aside h5 { margin: 14px 8px 6px; font-size: 11px; font-weight: 700; color: var(-
   .ly-sec { padding: 12px 14px 6px; }
   .decode { gap: 14px 24px; }
 }
+
+/* ===== tủ rack (17/11/2026): khung nét đứt trên mặt bằng camera + khung "mặt trước tủ chia U + danh sách thiết bị" ===== */
+.rk-vung { position: absolute; border: max(.8px, calc(var(--fs, 12px) * .1)) dashed #ffb547; border-radius: 3px; pointer-events: none; }
+.rk-dr { position: absolute; top: 14px; right: 66px; bottom: 14px; z-index: 12; width: 560px; max-width: calc(100% - 90px);
+  background: var(--card); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 40px rgba(0, 0, 0, .45);
+  display: flex; flex-direction: column; overflow: hidden; font-size: 13px; }
+.rk-h { display: flex; gap: 12px; align-items: center; padding: 14px 16px 10px; border-bottom: 1px solid var(--line); }
+.rk-ico { width: 42px; height: 42px; flex: none; border-radius: 10px; background: rgba(255, 216, 77, .14); display: grid; place-items: center; color: #ffd84d; }
+.rk-ico svg { width: 26px; height: 26px; }
+.rk-h .ma { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: .3px; }
+.rk-h .sub { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+.rk-h .x { margin-left: auto; width: 32px; height: 32px; border: 0; border-radius: 8px; background: var(--chip-bg); color: var(--muted);
+  font-size: 20px; line-height: 1; cursor: pointer; }
+.rk-h .x:hover { color: #fff; }
+.rk-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 16px; border-bottom: 1px solid var(--row-line); }
+.rk-tags span { background: var(--chip-bg); color: var(--muted); border-radius: 6px; padding: 2px 8px; font-size: 11.5px; font-weight: 600; }
+.rk-tags b { color: var(--text); }
+.rk-b { display: flex; gap: 14px; padding: 12px 16px; overflow: auto; flex: 1; min-height: 0; }
+.rk-el { flex: 0 0 190px; }
+.rk-el .t { font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.rk-frame { border: 3px solid #4a5568; border-radius: 6px; padding: 3px 3px 3px 0; background: #12161c; display: grid; grid-template-columns: 22px 1fr; }
+.rk-u { color: #5b6677; font-size: 8.5px; text-align: right; padding-right: 4px; }
+.rk-u div { margin-bottom: 1px; }
+.rk-slots { display: flex; flex-direction: column; gap: 1px; }
+.rk-s { border-radius: 2px; display: flex; align-items: center; padding: 0 5px; font-size: 9.5px; font-weight: 700; overflow: hidden;
+  white-space: nowrap; color: #0e1218; }
+.rk-s.net { background: #34d1bc; } .rk-s.proc { background: #f2a11c; } .rk-s.acc { background: #a897ff; }
+.rk-s.phu { background: #3a4352; color: #c7d0dc; border: 1px dashed #6b778a; }
+.rk-s.trong { background: repeating-linear-gradient(45deg, #181d25 0 4px, #1d232c 4px 8px); color: #566173; font-weight: 500; }
+.rk-ds { flex: 1; min-width: 0; }
+.rk-g { margin-bottom: 10px; }
+.rk-g h5 { margin: 0 0 5px; font-size: 12px; color: var(--h); display: flex; align-items: center; gap: 6px; }
+.rk-g h5 i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.rk-g h5 em { font-style: normal; color: var(--muted); font-weight: 500; font-size: 11.5px; }
+.rk-it { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 8px; padding: 5px 7px; border-radius: 7px; background: #232934; margin-bottom: 4px; }
+.rk-it.chon { outline: 2px solid var(--code-yellow); background: #2f3540; }
+.rk-s.chon { outline: 2px solid #fff; outline-offset: -1px; }
+.rk-it .m { font-weight: 800; color: var(--code-yellow); font-size: 12.5px; }
+.rk-it .m.no { color: #6b778a; font-weight: 600; }
+.rk-it .n { color: var(--text); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rk-it .u { color: var(--muted); font-size: 11px; text-align: right; }
+.rk-it .d { grid-column: 1 / 3; color: var(--muted); font-size: 11px; }
+.rk-it .ip { color: #5fe3cf; font-size: 11.5px; font-weight: 700; text-align: right; }
+.rk-it .ip.no { color: #6b778a; font-weight: 500; }
+.rk-f { border-top: 1px solid var(--line); padding: 9px 16px 12px; color: var(--muted); font-size: 11.5px; line-height: 1.5; }
+.rk-f b { color: var(--text); }
+.rk-f ul { margin: 4px 0 0; padding-left: 16px; }
+@media (max-width: 760px) {
+  .rk-dr { top: auto; left: 0; right: 0; bottom: 0; width: auto; max-width: none; height: 66%; border-radius: 16px 16px 0 0; }
+  .rk-b { flex-direction: column; } .rk-el { flex: none; } .rk-f ul { display: none; }
+}
+
+/* bảng IP thiết bị trong tủ rack, đặt cạnh tủ trên mặt bằng (17/11/2026). Cỡ chữ theo nhãn bản vẽ (--fs). Viền cam = màu tủ rack */
+.ip-tu { position: absolute; z-index: 1; background: var(--lbl-bg); border: max(.35px, calc(var(--fs) * .1)) solid #ffb547;
+  border-radius: calc(var(--fs) * .3); padding: calc(var(--fs) * .2) calc(var(--fs) * .35) calc(var(--fs) * .25);
+  font-size: calc(var(--fs) * .92); line-height: 1.18; white-space: nowrap; cursor: pointer; box-shadow: var(--lbl-shadow); }
+.ip-tu .h { color: #ffb547; font-size: .78em; font-weight: 700; margin-bottom: .15em; }
+.ip-tu .r { display: grid; grid-template-columns: .55em auto auto; align-items: center; column-gap: .45em; }
+.ip-tu .r i { width: .55em; height: .55em; border-radius: .12em; background: #6b778a; }
+.ip-tu .r i.proc { background: #f2a11c; } .ip-tu .r i.net { background: #34d1bc; } .ip-tu .r i.acc { background: #a897ff; }
+.ip-tu .r b { color: var(--lbl-code); font-weight: 800; }
+.ip-tu .r span { color: var(--lbl-ip); }
+.ip-tu:hover { box-shadow: 0 0 0 max(.6px, calc(var(--fs) * .12)) rgba(255, 181, 71, .45); }
+.stage line.ip-tu-day { stroke: #ffb547; stroke-dasharray: 2 1.2; }
+.canvas.focus .stage .ip-tu { opacity: .3; }
+.lbl-demo { flex-direction: column; align-items: stretch; }
+.lbl-demo-r { display: flex; align-items: center; gap: 10px; }
+.ip-tu.mau { position: static; cursor: default; }
+.rk-tags span.mang { background: rgba(52, 209, 188, .12); color: var(--muted); }

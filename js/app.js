@@ -17,7 +17,9 @@
    Phím tắt (máy tính): A / D – sang tab bên trái / bên phải; W / S – lên / xuống mặt bằng; đều chạy vòng.
    Tham số chụp ảnh kiểm tra: ?demo=phim&phim=D,S (giả lập nhấn phím) · ?demo=legend (mở chú giải) · ?demo=hinh (mở hình thiết bị)
    · ?demo=chon&chon=CN2,NG (đã chọn hình) · ?demo=loc&chon=CN2,NG (đã bấm ×, đang lọc) · ?demo=keo-hinh (giả lập kéo nút ⋮⋮⋮)
-   · ?demo=search&q=<chuỗi> (danh sách gợi ý) */
+   · ?demo=search&q=<chuỗi> (danh sách gợi ý)
+   · ?demo=xem-tu&tu=<mã tủ>&pad=<hệ số> (phóng quanh tủ + bảng IP, không mở khung tủ)
+   Bảng IP cạnh tủ: chủ dự án duyệt 17/11/2026 phương án "mọi thiết bị có IP trong tủ" (PA2, docs 2026-11-17_09). */
 (() => {
   "use strict";
   const D = window.DATA;
@@ -34,6 +36,7 @@
     ocam: { ten: "Ổ cắm & tủ điện", dv: "thiết bị" },
     tel: { ten: "TEL-DATA & Wi-Fi", dv: "điểm" },
   };
+  const soTb = (p) => p.items.filter((i) => i.loai !== "RK").length;   // thiết bị trên mặt bằng, không tính tủ rack
   const isTrunking = (p) => p.nhom_trang.startsWith("Mặt bằng trunking");
 
   /* ================= biểu tượng ================= */
@@ -139,7 +142,8 @@
     </section>
     <section class="cards">${cols.map((t) => {
       const x = D.tabs[t];
-      const ip = x.co_ip ? `<span class="tag ok">${x.co_ip}/${x.so} có IP</span>` : `<span class="tag no">Chỉ mã nhãn – chưa có IP</span>`;
+      const ip = (x.co_ip ? `<span class="tag ok">${x.co_ip}/${x.so} có IP</span>` : `<span class="tag no">${x.ip_tu ? "Điểm trên mặt bằng: chưa có IP" : "Chỉ mã nhãn – chưa có IP"}</span>`)
+        + (x.ip_tu ? ` <span class="tag ok">${x.ip_tu} thiết bị trong tủ có IP</span>` : "");
       return `<a class="card ${t}" href="#${t}">
         <div class="head"><span class="ico">${icon(t, 19)}</span>${INFO[t].ten}</div>
         <div class="big num">${x.so}</div><div class="unit">${INFO[t].dv} · ${x.trang} trang mặt bằng</div>
@@ -246,6 +250,7 @@
   const view = { tx: 0, ty: 0, z: 1 };
   const MAX_Z = 8;
 
+  let lblBase = "";
   function openPlanTab(id) {
     planTab = id;
     PLANS = MB[id];
@@ -253,18 +258,18 @@
     pdf.href = D.tabs[id].pdf;
     pdf.innerHTML = icon("dl", 16) + " Tải PDF";
     $("#fit").innerHTML = `<span>Vừa màn hình</span>${icon("fit", 18)}`;
-    $("#lbl-demo").innerHTML = id === "camera"
+    lblBase = id === "camera"
       ? `<div class="lbl"><b>Mã nhãn</b><span>Địa chỉ IP</span></div> nhãn thiết bị`
       : `<div class="lbl lbl1" style="--fs:13px"><b>Mã nhãn</b></div> nhãn thiết bị (chưa có IP)`;
     let grp = null, og = null;
     $("#floors").innerHTML = PLANS.map((p, i) => {
       const h = p.nhom_trang && p.nhom_trang !== grp ? `<h5>${esc((grp = p.nhom_trang))}</h5>` : "";
-      return `${h}<button type="button" class="floor" data-i="${i}"><span>${esc(p.khu_vuc)}</span><span class="c num">${p.items.length}</span></button>`;
+      return `${h}<button type="button" class="floor" data-i="${i}"><span>${esc(p.khu_vuc)}</span><span class="c num">${soTb(p)}</span></button>`;
     }).join("");
     $("#floor-sel").innerHTML = PLANS.map((p, i) => {
       let h = "";
       if (p.nhom_trang && p.nhom_trang !== og) { h = (og ? "</optgroup>" : "") + `<optgroup label="${esc((og = p.nhom_trang))}">`; }
-      return `${h}<option value="${i}">${esc(p.khu_vuc)}${isTrunking(p) ? " (trunking)" : ""} · ${p.items.length} ${INFO[id].dv}</option>`;
+      return `${h}<option value="${i}">${esc(p.khu_vuc)}${isTrunking(p) ? " (trunking)" : ""} · ${soTb(p)} ${INFO[id].dv}</option>`;
     }).join("") + (og ? "</optgroup>" : "");
     $$(".floor").forEach((f) => f.addEventListener("click", () => { loadPlan(+f.dataset.i); setHash(); }));
     if (!stp.hidden) { chon.clear(); setPanel(FLOAT[1], false); }   // đổi tab: bỏ các hình đang chọn dở của tab trước
@@ -279,8 +284,11 @@
     $$(".floor").forEach((f) => f.classList.toggle("on", +f.dataset.i === idx));
     $("#floor-sel").value = String(idx);
     $("#crumb").innerHTML = `${esc(INFO[planTab].ten)} <span>›</span> ${esc(P.khu_vuc)}${isTrunking(P) ? " <span>· trunking</span>" : ""}`;
-    const n = P.items.length, nip = P.items.filter((i) => i.ip).length;
-    $("#count").textContent = nip ? `${n} ${INFO[planTab].dv} · ${nip} có IP` : `${n} ${INFO[planTab].dv} · chưa có IP`;
+    closeRack();
+    const n = soTb(P), nip = P.items.filter((i) => i.ip).length, nr = P.items.length - n;
+    const ipTu = P.items.filter((i) => i.loai === "RK" && TU[i.ma]).reduce((s, i) => s + tbCoIp(TU[i.ma]).length, 0);
+    $("#count").textContent = (nip ? `${n} ${INFO[planTab].dv} · ${nip} có IP` : `${n} ${INFO[planTab].dv} · chưa có IP`)
+      + (nr ? ` · ${nr} tủ rack` + (ipTu ? ` (${ipTu} IP trong tủ)` : "") : "");
     renderStrip(stp, P);
     renderLegend(lgp, P);
     if (stage) stage.remove();
@@ -296,6 +304,9 @@
       h += `<g data-i="${i}"><line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" style="stroke-width:${lw}"/><circle cx="${a[0]}" cy="${a[1]}" r="${lw * 2}"/></g>`;
     });
     h += `</svg>`;
+    P.items.forEach((it) => {
+      if (it.khung) { const s = it.sym_box; h += `<div class="rk-vung" style="left:${s[0]}px;top:${s[1]}px;width:${s[2] - s[0]}px;height:${s[3] - s[1]}px"></div>`; }
+    });
     P.items.forEach((it, i) => {
       const [x0, y0, x1, y1] = it.label_box, s = it.sym_box, m = Math.max(1, P.fs * 0.25);
       h += labelHtml(P, it, `left:${(x0 + x1) / 2}px;top:${(y0 + y1) / 2}px`, ` data-i="${i}"`) +
@@ -304,6 +315,9 @@
     });
     stage.innerHTML = h;
     cv.prepend(stage);
+    const nBang = bangIpTu();
+    $("#lbl-demo").innerHTML = `<div class="lbl-demo-r">${lblBase}</div>` + (nBang ? `<div class="lbl-demo-r"><div class="ip-tu mau" style="--fs:12px"><div class="h">Trong tủ</div>
+      <div class="r"><i class="proc"></i><b>Mã nhãn</b><span>Địa chỉ IP</span></div></div> IP thiết bị trong tủ rack</div>` : "");
     $$(".hit", stage).forEach((el) => {
       el.addEventListener("mouseenter", () => { if (!(gest && gest.moved)) { clearTimeout(closeT); openLens(+el.dataset.i, false); } });
       el.addEventListener("mouseleave", scheduleClose);
@@ -312,6 +326,70 @@
     applyFilter();
     fit();
     placeAll();
+  }
+
+  /* ================= bảng IP thiết bị trong tủ rack, đặt cạnh tủ trên mặt bằng (17/11/2026) =================
+     Thiết bị trong tủ không có ký hiệu riêng trên mặt bằng (hoặc ký hiệu không có nhãn), nên IP được gom thành một bảng nhỏ
+     nối với nhãn tủ bằng dây dẫn. Cỡ chữ theo nhãn của bản vẽ (P.fs), phóng to cùng mặt bằng. Chọn chỗ đặt: thử các vị trí
+     quanh tủ, lấy chỗ ít đè nhãn / ký hiệu nhất, trong phần bản vẽ (không chạm khung chú giải). Click bảng → mở khung tủ. */
+  function tbCoIp(R) {                      // thiết bị trong tủ có IP (PA2 – chủ dự án duyệt 17/11/2026); Processor đứng trước
+    const xs = [...R.units, ...R.ngoai_u].filter((x) => x.ma && x.ip);
+    return xs.sort((a, b) => (a.nhom === "proc" ? 0 : 1) - (b.nhom === "proc" ? 0 : 1));
+  }
+  function bangIpTu() {
+    let so = 0;
+    const svg = $("svg", stage), obs = [];
+    const nong = (b, m) => [b[0] - m, b[1] - m, b[2] + m, b[3] + m];          // chừa khoảng cách quanh vật cản
+    P.items.forEach((it) => { obs.push(nong(it.label_box, P.fs * 0.4), nong(it.sym_box, P.fs * 0.4)); });
+    (P.phu || []).forEach((x) => obs.push(nong(x.box, P.fs * 0.4)));
+    const placed = [];
+    P.items.forEach((it, i) => {
+      const R = it.loai === "RK" && TU[it.ma];
+      const xs = R ? tbCoIp(R) : [];
+      if (!xs.length) return;
+      const el = document.createElement("div");
+      el.className = "ip-tu";
+      el.dataset.i = i;
+      el.style.setProperty("--fs", P.fs + "px");
+      el.innerHTML = `<div class="h">Trong tủ ${esc(R.ma)}</div>` + xs.map((x) =>
+        `<div class="r"><i class="${x.nhom}"></i><b>${esc(x.ma)}</b><span>${esc(x.ip)}</span></div>`).join("");
+      stage.appendChild(el);
+      const w = el.offsetWidth, hh = el.offsetHeight, g = P.fs * 0.8;
+      const L = it.label_box, S = it.sym_box;
+      const U = [Math.min(L[0], S[0]), Math.min(L[1], S[1]), Math.max(L[2], S[2]), Math.max(L[3], S[3])];
+      const cx = (U[0] + U[2]) / 2, cy = (U[1] + U[3]) / 2;
+      const cand = [];
+      for (const d of [g, 3 * g, 6 * g, 10 * g]) {
+        for (const f of [0, -0.5, 0.5, -1, 1]) {
+          cand.push([cx - w / 2 + f * w, U[3] + d], [cx - w / 2 + f * w, U[1] - d - hh],      // dưới, trên
+            [U[0] - d - w, cy - hh / 2 + f * hh], [U[2] + d, cy - hh / 2 + f * hh]);         // trái, phải
+        }
+      }
+      const area = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
+      let best = null;
+      cand.forEach(([x, y], k) => {
+        const B = [x, y, x + w, y + hh];
+        if (B[0] < 2 || B[1] < 2 || B[2] > P.clip_x1 - 4 || B[3] > P.h - 2) return;
+        const s = [...obs, ...placed].reduce((a, o) => a + area(B, o), 0) + k * 0.01;   // ưu tiên chỗ gần, thứ tự dưới/trên/trái/phải
+        if (!best || s < best.s) best = { s, B };
+      });
+      if (!best) { el.remove(); return; }
+      const B = best.B;
+      placed.push(B);
+      el.style.left = B[0] + "px";
+      el.style.top = B[1] + "px";
+      // dây dẫn: từ cạnh tủ (ký hiệu/khung + nhãn) gần nhất tới cạnh bảng gần nhất – không chạy xuyên cụm thiết bị
+      const px = clamp(clamp(cx, B[0], B[2]), U[0], U[2]), py = clamp(clamp(cy, B[1], B[3]), U[1], U[3]);
+      const qx = clamp(px, B[0], B[2]), qy = clamp(py, B[1], B[3]);
+      const ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      Object.entries({ x1: px, y1: py, x2: qx, y2: qy, class: "ip-tu-day", "data-i": i }).forEach(([k, v]) => ln.setAttribute(k, v));
+      ln.style.strokeWidth = Math.max(0.3, P.fs * 0.09);
+      svg.appendChild(ln);
+      el.addEventListener("click", (e) => { e.stopPropagation(); openRack(it.ma); });
+      el.addEventListener("pointerdown", (e) => e.stopPropagation());
+      so++;
+    });
+    return so;
   }
 
   /* ================= lọc theo loại thiết bị (chọn hình trong khung ⋮⋮⋮) =================
@@ -456,7 +534,7 @@
     pts.delete(e.pointerId);
     if (gest && gest.mode === "pan" && !gest.moved && e.type === "pointerup") {
       const i = gest.hit ? +gest.hit.dataset.i : gest.type !== "mouse" ? nearest(e.clientX, e.clientY, 24) : -1;
-      if (i >= 0) openLens(i, true);
+      if (i >= 0 && !moTu(i)) openLens(i, true);
     }
     if (pts.size === 0) { gest = null; cv.classList.remove("drag"); }
     else if (gest && gest.mode === "pinch" && pts.size === 1) {     // nhấc 1 ngón: kéo tiếp bằng ngón còn lại
@@ -636,9 +714,80 @@
     f.unsetPos = () => { f.pos = null; skipClick = false; try { localStorage.removeItem(f.key); } catch { /* bỏ qua */ } };
   }
 
+
+  /* ================= tủ rack: khung "mặt trước tủ chia U + danh sách thiết bị" (chủ dự án duyệt 17/11/2026) =================
+     Dữ liệu D.tu_rack (thiet_bi_khac/tu_rack.py). Chạm / click vào tủ trên mặt bằng, hoặc tìm mã tủ / mã thiết bị trong tủ
+     → mở khung bên phải (điện thoại: trượt lên từ cạnh dưới). Tủ không có IP; IP là của thiết bị trong tủ. */
+  const TU = Object.fromEntries((D.tu_rack || []).map((t) => [t.ma, t]));
+  const NHOM_TU = [["net", "Networking", "#34d1bc"], ["proc", "Processor", "#f2a11c"], ["acc", "Accessory", "#a897ff"],
+    ["phu", "Phụ kiện tủ", "#6b778a"]];
+  const TU_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2.5" width="14" height="17" rx="1.5"/><path d="M8 7h8M8 11h8M8 15h8M7 19.5V22M17 19.5V22"/></svg>';
+  var tuMo = null;
+  function closeRack() { if (tuMo) { tuMo.remove(); tuMo = null; } }
+  function openRack(ma, chon = "") {          // chon: mã thiết bị trong tủ cần tô viền (khi tìm kiếm)
+    const R = TU[ma];
+    if (!R) return;
+    closeRack();
+    closeLens();
+    const dt = matchMedia("(max-width: 760px)").matches;
+    const uh = dt ? Math.min(9, 280 / R.u) : Math.min(15, 470 / R.u);
+    const all = [...R.units.filter((x) => x.nhom !== "trong"), ...R.ngoai_u];
+    const nma = all.filter((x) => x.ma).length, nip = all.filter((x) => x.ip).length;
+    const uTxt = (x) => (x.u ? `U${x.h > 1 ? `${x.u - x.h + 1}–${x.u}` : x.u}` : "ngoài khe U");
+    const ruler = Array.from({ length: R.u }, (_, k) => `<div style="height:${uh}px">${R.u - k}</div>`).join("");
+    const slots = R.units.map((x) => `<div class="rk-s ${x.nhom}${x.ma && x.ma === chon ? " chon" : ""}" style="height:${x.h * uh + (x.h - 1)}px" title="${esc(x.ten)}">${esc(x.ma || x.ten)}</div>`).join("");
+    const groups = NHOM_TU.map(([g, ten, mau]) => {
+      const xs = all.filter((x) => x.nhom === g);
+      if (!xs.length) return "";
+      return `<div class="rk-g"><h5><i style="background:${mau}"></i>${ten} <em>${xs.length}</em></h5>` + xs.map((x) =>
+        `<div class="rk-it${x.ma && x.ma === chon ? " chon" : ""}"><span class="m${x.ma ? "" : " no"}">${x.ma ? esc(x.ma) : "—"}</span><span class="n">${esc(x.ten)}</span>
+           <span class="u">${uTxt(x)}</span><span class="d">${esc(x.model)}</span>
+           <span class="ip${x.ip ? "" : " no"}">${x.ip ? esc(x.ip) : x.khong_ip ? "không dùng IP" : x.ma ? "chưa có IP" : ""}</span></div>`).join("") + `</div>`;
+    }).join("");
+    const el = document.createElement("div");
+    el.className = "rk-dr";
+    el.innerHTML = `<div class="rk-h"><div class="rk-ico">${TU_ICON}</div><div><div class="ma">${esc(R.ma)}</div>
+        <div class="sub">${esc(R.loai)} · ${R.he === "camera" ? "Camera" : "TEL-DATA & Wi-Fi"} · ${esc(R.khu_vuc)}</div></div>
+        <button class="x" type="button" aria-label="Đóng">×</button></div>
+      <div class="rk-tags"><span>Model tủ: <b>${esc(R.model)}</b></span><span><b>${nma}</b> thiết bị có mã · <b>${nip}</b> có IP</span>
+        <span>Tủ không có IP riêng</span>${(R.mang || []).map((m) =>
+          `<span class="mang">Mạng <b>${esc(m.mang)}</b>${m.vlan ? " · " + esc(m.vlan) : ""} – ${esc(m.dung_cho)}</span>`).join("")}</div>
+      <div class="rk-b">
+        <div class="rk-el"><div class="t">Mặt trước tủ · ${R.u}U</div>
+          <div class="rk-frame"><div class="rk-u" style="line-height:${uh}px">${ruler}</div><div class="rk-slots">${slots}</div></div></div>
+        <div class="rk-ds">${groups}</div>
+      </div>
+      <div class="rk-f"><b>Kết nối:</b> ${esc(R.ket_noi)}<ul>${R.ghi_chu.map((s) => `<li>${esc(s)}</li>`).join("")}</ul></div>`;
+    el.querySelector(".x").addEventListener("click", closeRack);
+    ["pointerdown", "wheel"].forEach((ev) => el.addEventListener(ev, (e) => e.stopPropagation()));
+    cv.appendChild(el);
+    tuMo = el;
+    const hl = el.querySelector(".rk-it.chon");
+    if (hl) hl.scrollIntoView({ block: "nearest" });
+    // dời mặt bằng để tủ nằm giữa phần còn nhìn thấy (máy tính: bên trái khung; điện thoại: phía trên khung)
+    const k = P.items.findIndex((it) => it.ma === ma);
+    if (k >= 0) {
+      const s = P.items[k].sym_box, l = P.items[k].label_box;
+      const cx = (Math.min(s[0], l[0]) + Math.max(s[2], l[2])) / 2, cy = (Math.min(s[1], l[1]) + Math.max(s[3], l[3])) / 2;
+      const W = dt ? cv.clientWidth : cv.clientWidth - el.offsetWidth - 80, H = dt ? cv.clientHeight - el.offsetHeight : cv.clientHeight;
+      view.z = clamp(Math.max(view.z, 16 / P.fs), 0.2, MAX_Z);
+      view.tx = W / 2 - cx * view.z;
+      view.ty = H / 2 - cy * view.z;
+      apply();
+    }
+  }
+  const moTu = (i) => (P.items[i].loai === "RK" && TU[P.items[i].ma] ? (openRack(P.items[i].ma), true) : false);
+
   /* ================= tìm kiếm (4 bộ mặt bằng) ================= */
   const ALL = PLAN_TABS.flatMap((t) => MB[t].flatMap((p, pi) => p.items.map((it, i) => ({
     ma: it.ma, ip: it.ip, t, pi, i, kv: `${INFO[t].ten} · ${p.khu_vuc}${isTrunking(p) ? " · trunking" : ""}` }))));
+  for (const R of D.tu_rack || []) {
+    const t = R.he === "camera" ? "camera" : "tel";
+    MB[t].forEach((p, pi) => p.items.forEach((it, i) => {
+      if (it.ma !== R.ma) return;
+      for (const x of [...R.units, ...R.ngoai_u]) if (x.ma) ALL.push({ ma: x.ma, ip: x.ip, khong_ip: x.khong_ip, t, pi, i, rk: R.ma, kv: `Trong tủ ${R.ma} · ${p.khu_vuc}` });
+    }));
+  }
   const top = $("#top"), input = $(".search input");
   const drop = document.createElement("div");
   drop.className = "drop"; drop.hidden = true;
@@ -654,7 +803,7 @@
     sel = 0;
     drop.innerHTML = hits.length
       ? hits.map((x, k) => `<div class="res${k === 0 ? " sel" : ""}" data-k="${k}"><b>${mark(x.ma, q)}</b>
-          <span>${x.ip ? mark(x.ip, q) : "chưa có IP"}</span><em>${esc(x.kv)}</em></div>`).join("")
+          <span>${x.ip ? mark(x.ip, q) : x.khong_ip ? "không dùng IP" : "chưa có IP"}</span><em>${esc(x.kv)}</em></div>`).join("")
       : `<div class="res-empty">Không tìm thấy “${esc(q)}”.</div>`;
     drop.hidden = false;
     $$(".res", drop).forEach((r) => r.addEventListener("mousedown", (e) => { e.preventDefault(); go(hits[+r.dataset.k]); }));
@@ -691,6 +840,7 @@
     const F = filter[x.t];
     if (F && !F.has(P.items[x.i].loai)) clearFilter();
     focusOn(x.i);
+    if (x.rk) openRack(x.rk, x.ma); else moTu(x.i);
     history.replaceState(null, "", "#ma=" + encodeURIComponent(x.ma));
   }
   function focusOn(i) {
@@ -708,6 +858,7 @@
   document.addEventListener("keydown", (e) => {
     if (e.key !== "Escape" || e.target === input) return;
     closeLens();
+    closeRack();
     FLOAT.forEach((f) => { if (!f.panel.hidden) setPanel(f, false); });
   });
   window.addEventListener("resize", () => { if (P && PLAN_TABS.includes(curTab)) { apply(); placeAll(); } });
@@ -817,4 +968,19 @@
     document.dispatchEvent(new KeyboardEvent("keydown", { code: "Key" + k.toUpperCase(), key: k.toLowerCase(), bubbles: true }));
   }
   if (Q.get("demo") === "search") { top.classList.add("tim"); input.value = Q.get("q") || "CX0"; renderDrop(); }
+  if (demo === "xem-tu" && PLAN_TABS.includes(curTab)) {      // phóng to quanh tủ (gồm bảng IP cạnh tủ), không mở khung tủ
+    const k = P.items.findIndex((it) => it.ma === Q.get("tu"));
+    if (k >= 0) {
+      const bx = [P.items[k].sym_box, P.items[k].label_box];
+      const b = $(`.ip-tu[data-i="${k}"]`, stage);
+      if (b) bx.push([b.offsetLeft, b.offsetTop, b.offsetLeft + b.offsetWidth, b.offsetTop + b.offsetHeight]);
+      const x0 = Math.min(...bx.map((v) => v[0])), y0 = Math.min(...bx.map((v) => v[1]));
+      const x1 = Math.max(...bx.map((v) => v[2])), y1 = Math.max(...bx.map((v) => v[3]));
+      const pad = +(Q.get("pad") || 1.8);                       // khung nhìn = pad × cỡ vùng tủ + bảng
+      view.z = clamp(Math.min(cv.clientWidth / ((x1 - x0) * pad), cv.clientHeight / ((y1 - y0) * pad)), 0.2, MAX_Z);
+      view.tx = cv.clientWidth / 2 - (x0 + x1) / 2 * view.z;
+      view.ty = cv.clientHeight / 2 - (y0 + y1) / 2 * view.z;
+      apply();
+    }
+  }
 })();
