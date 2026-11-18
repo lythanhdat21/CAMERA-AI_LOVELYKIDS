@@ -17,7 +17,8 @@
    Phím tắt (máy tính): A / D – sang tab bên trái / bên phải; W / S – lên / xuống mặt bằng; đều chạy vòng.
      Shift (nhấn riêng) = bấm nút +; Ctrl (nhấn riêng) = bấm nút ⋮⋮⋮; Space = nút "Hiện tất cả" khi đang lọc (18/11/2026).
    Tham số chụp ảnh kiểm tra: ?demo=phim&phim=D,S (giả lập nhấn phím) · ?demo=legend (mở chú giải) · ?demo=hinh (mở hình thiết bị)
-   · ?demo=chon&chon=CN2,NG (đã chọn hình) · ?demo=loc&chon=CN2,NG (đã bấm ×, đang lọc) · ?demo=keo-hinh (giả lập kéo nút ⋮⋮⋮)
+   · ?demo=chon&chon=CN2,NG (đã chọn hình) · ?demo=loc&chon=CN2,NG (đã bấm ×, đang lọc)
+   · ?demo=chon-cg&chon=… / ?demo=loc-cg&chon=… (như trên, chọn trong khung chú giải +) · ?demo=keo-hinh (giả lập kéo nút ⋮⋮⋮)
    · ?demo=search&q=<chuỗi> (danh sách gợi ý)
    · ?demo=xem-tu&tu=<mã tủ>&pad=<hệ số> (phóng quanh tủ + bảng IP, không mở khung tủ)
    Bảng IP cạnh tủ: chủ dự án duyệt 17/11/2026 phương án "mọi thiết bị có IP trong tủ" (PA2, docs 2026-11-17_09). */
@@ -243,12 +244,19 @@
       ? `<span class="sym thoi" style="${st}"><i>${esc(i.ma)}</i></span>`
       : `<span class="sym ${i.hinh}" style="${st}">${esc(i.ma)}</span>`;
   }
+  /* Chú giải cũng chọn được để lọc, giống khung ⋮⋮⋮ (chủ dự án 18/11/2026): dòng có cùng mã với dải ảnh (= mã loại lọc)
+     thì bấm được; dòng không phải thiết bị (T2, TT trên camera Tầng 1; I1, I2 dịch vụ trên control Tầng 1) chỉ để xem. */
   function renderLegend(el, plan) {
-    el.innerHTML = `<div class="lgp-h">Chú giải · ${esc(plan.khu_vuc)}</div>` + plan.chu_giai.map((g) => `
+    const loc = new Set(plan.dai_anh.flatMap((g) => g.items.map((i) => i.ma)));
+    el.innerHTML = `<div class="lgp-h"><span>Chú giải · ${esc(plan.khu_vuc)}</span>
+      <em>Chọn dòng để lọc, rồi bấm <b>−</b> để xem trên mặt bằng</em></div>` + plan.chu_giai.map((g) => `
       <div class="lgp-g">${esc(g.nhom)} <span class="num">(${g.tong})</span></div>
-      ${g.items.map((i) => `<div class="lgp-i">${legendSym(i)}
+      ${g.items.map((i) => {
+        const ok = loc.has(i.ma), on = ok && chon.has(i.ma);
+        return `<div class="lgp-i${on ? " chon" : ""}"${ok ? ` data-ma="${esc(i.ma)}" role="button" tabindex="0" aria-pressed="${on}"` : ""}>${legendSym(i)}
         <div class="lgp-t">${i.hinh === "anh" ? `<em>${esc(i.ma)}</em> ` : ""}${esc(i.ten)}<small>${esc(i.model)}</small></div>
-        <b class="num">${i.sl}</b></div>`).join("")}`).join("");
+        <b class="num">${i.sl}</b></div>`;
+      }).join("")}`).join("");
   }
 
   /* ================= mặt bằng (dùng chung 5 tab) ================= */
@@ -279,7 +287,7 @@
       return `${h}<option value="${i}">${esc(p.khu_vuc)}${isTrunking(p) ? " (trunking)" : ""} · ${soTb(p)} ${INFO[id].dv}</option>`;
     }).join("") + (og ? "</optgroup>" : "");
     $$(".floor").forEach((f) => f.addEventListener("click", () => { loadPlan(+f.dataset.i); setHash(); }));
-    if (!stp.hidden) { chon.clear(); setPanel(FLOAT[1], false); }   // đổi tab: bỏ các hình đang chọn dở của tab trước
+    FLOAT.forEach((f) => { if (!f.panel.hidden) { chon.clear(); setPanel(f, false); } });   // đổi tab: bỏ các lựa chọn dở của tab trước
     cur = -1;
     loadPlan(clamp(lastPage[id], 0, PLANS.length - 1));
   }
@@ -399,9 +407,10 @@
     return so;
   }
 
-  /* ================= lọc theo loại thiết bị (chọn hình trong khung ⋮⋮⋮) =================
-     Khung mở: bấm hình để chọn/bỏ chọn (chưa lọc). Bấm × (đóng khung): nếu có chọn thì mặt bằng chỉ còn
-     ký hiệu + nhãn của các loại đã chọn. Bấm ⋮⋮⋮ lần nữa: hiện lại tất cả, bỏ các lựa chọn cũ để chọn lại.
+  /* ================= lọc theo loại thiết bị (chọn hình trong khung ⋮⋮⋮ hoặc dòng trong khung chú giải +) =================
+     Khung mở: bấm hình / dòng để chọn/bỏ chọn (chưa lọc). Đóng khung (× hoặc −): nếu có chọn thì mặt bằng chỉ còn
+     ký hiệu + nhãn của các loại đã chọn. Mở lại một khung: hiện lại tất cả, bỏ các lựa chọn cũ để chọn lại.
+     Hai khung dùng chung một bộ chọn: đang mở khung này mà bấm nút kia thì chuyển khung, giữ nguyên lựa chọn.
      Bộ lọc giữ khi đổi mặt bằng trong cùng tab; nút "Hiện tất cả" trên nhãn "Đang lọc" để bỏ lọc. */
   const chon = new Set();
   const filter = {};                       // tab → Set mã loại đang lọc
@@ -434,14 +443,20 @@
   function clearFilter() {
     delete filter[planTab];
     chon.clear();
-    $$(".st.chon", stp).forEach((e) => { e.classList.remove("chon"); e.setAttribute("aria-pressed", "false"); });
+    syncChon();
     applyFilter();
   }
+  function syncChon() {                    // tô lựa chọn trên cả hai khung (hình thiết bị + chú giải)
+    for (const e of [...$$(".st", stp), ...$$(".lgp-i[data-ma]", lgp)]) {
+      const on = chon.has(e.dataset.ma);
+      e.classList.toggle("chon", on);
+      e.setAttribute("aria-pressed", String(on));
+    }
+  }
   function toggleTile(el) {
-    const c = el.dataset.ma, on = !chon.has(c);
-    if (on) chon.add(c); else chon.delete(c);
-    el.classList.toggle("chon", on);
-    el.setAttribute("aria-pressed", String(on));
+    const c = el.dataset.ma;
+    if (chon.has(c)) chon.delete(c); else chon.add(c);
+    syncChon();
   }
 
   function apply() {
@@ -661,12 +676,14 @@
     Object.assign(p.style, { left: clamp(left, 8, cw - pw - 8) + "px", top: top + "px" });
   }
   const placeAll = () => FLOAT.forEach((f) => { placeBtn(f); placePanel(f); });
-  function setPanel(f, open) {
-    if (open) FLOAT.forEach((o) => { if (o !== f && !o.panel.hidden) setPanel(o, false); });
+  // chuyen = đóng khung này để mở khung kia: giữ lựa chọn, chưa lọc
+  function setPanel(f, open, chuyen = false) {
+    let giu = false;
+    if (open) FLOAT.forEach((o) => { if (o !== f && !o.panel.hidden) { giu = true; setPanel(o, false, true); } });
     const was = !f.panel.hidden;
     f.panel.hidden = !open;
-    if (f.panel === stp && P && was !== open) {
-      if (open) clearFilter();                                   // mở lại: hiện tất cả, chọn lại từ đầu
+    if (P && was !== open && !chuyen) {
+      if (open) { if (!giu) clearFilter(); }                     // mở lại: hiện tất cả, chọn lại từ đầu
       else if (chon.size) { filter[planTab] = new Set(chon); applyFilter(); }
     }
     f.btn.classList.toggle("on", open);
@@ -675,11 +692,13 @@
     placePanel(f);
   }
   const setLegend = (open) => setPanel(FLOAT[0], open);
-  stp.addEventListener("click", (e) => { const el = e.target.closest(".st"); if (el) toggleTile(el); });
-  stp.addEventListener("keydown", (e) => {
-    const el = e.target.closest(".st");
-    if (el && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggleTile(el); }
-  });
+  for (const p of [stp, lgp]) {
+    p.addEventListener("click", (e) => { const el = e.target.closest(".st, .lgp-i[data-ma]"); if (el) toggleTile(el); });
+    p.addEventListener("keydown", (e) => {
+      const el = e.target.closest(".st, .lgp-i[data-ma]");
+      if (el && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); toggleTile(el); }
+    });
+  }
   for (const f of FLOAT) {
     const b = f.btn, d = { down: false, moved: false };
     let skipClick = false;
@@ -997,10 +1016,12 @@
     f.unsetPos();
     setPanel(f, true);
   }
-  if ((demo === "chon" || demo === "loc") && PLAN_TABS.includes(curTab)) {
-    setPanel(FLOAT[1], true);
-    for (const c of (Q.get("chon") || "").split(",")) { const el = $$(".st", stp).find((e) => e.dataset.ma === c); if (el) toggleTile(el); }
-    if (demo === "loc") setPanel(FLOAT[1], false);
+  // ?demo=chon|loc (khung ⋮⋮⋮) · ?demo=chon-cg|loc-cg (khung chú giải +) &chon=CN2,NG
+  if (/^(chon|loc)(-cg)?$/.test(demo || "") && PLAN_TABS.includes(curTab)) {
+    const f = FLOAT[demo.endsWith("-cg") ? 0 : 1];
+    setPanel(f, true);
+    for (const c of (Q.get("chon") || "").split(",")) { const el = $$("[data-ma]", f.panel).find((e) => e.dataset.ma === c); if (el) toggleTile(el); }
+    if (demo.startsWith("loc")) setPanel(f, false);
   }
   // ?demo=phim&phim=D,S | Shift | Control | Space [&chon=CN2&phim2=Control,Space]: giả lập phím (Shift/Control = nhấn rồi nhả), chọn hình, phím lần 2
   const nhanPhim = (k) => {

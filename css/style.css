@@ -312,6 +312,16 @@ aside h5 { margin: 14px 8px 6px; font-size: 11px; font-weight: 700; color: var(-
 .ib.hinh { background: var(--st-btn); color: #17112f; }
 .ib.hinh svg { width: 12px; height: 12px; }
 .lgp-h { font-size: 11.5px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: var(--muted); }
+.lgp-h { display: flex; flex-direction: column; gap: 4px; }
+.lgp-h em { font-style: normal; text-transform: none; letter-spacing: 0; font-weight: 600; font-size: 12.5px; color: var(--accent); }
+.lgp-h em b { color: var(--text); }
+/* chú giải chọn được để lọc (18/11/2026): cùng kiểu chọn với khung ⋮⋮⋮ – viền vàng + dấu ✓ */
+.lgp-i[data-ma] { cursor: pointer; border-radius: 8px; margin: 0 -8px; padding: 4px 8px; position: relative; outline: none; }
+.lgp-i[data-ma]:hover { background: var(--accent-soft); }
+.lgp-i[data-ma]:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
+.lgp-i.chon { background: rgba(255, 216, 77, .14); box-shadow: inset 0 0 0 2px var(--code-yellow); }
+.lgp-i.chon::after { content: "✓"; position: absolute; top: -5px; right: -6px; width: 18px; height: 18px;
+  border-radius: 50%; background: var(--code-yellow); color: #1f242d; font-size: 12px; font-weight: 900; display: grid; place-items: center; }
 .lgp-g { font-weight: 800; color: var(--h); font-size: 14px; margin: 10px 0 4px; padding-top: 9px; border-top: 1px solid var(--line); }
 .lgp-g span { color: var(--code-yellow); }
 .lgp-i { display: grid; grid-template-columns: 44px 1fr auto; align-items: center; gap: 10px; padding: 4px 0; }
