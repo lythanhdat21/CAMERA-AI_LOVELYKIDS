@@ -32,6 +32,7 @@
   --c-control: #34d1bc; --cs-control: rgba(52, 209, 188, .16);
   --c-ocam: #f5b041; --cs-ocam: rgba(245, 176, 65, .16);
   --c-tel: #a897ff; --cs-tel: rgba(168, 151, 255, .16);
+  --c-pa: #ff7eb6; --cs-pa: rgba(255, 126, 182, .16);   /* 18/11/2026 – cùng màu nhóm Âm thanh PA trong khung tủ rack */
 
   /* mặt bằng */
   --canvas: #151920;
@@ -121,7 +122,7 @@ main { max-width: 1440px; margin: 0 auto; padding: 28px 32px 40px; }
 .pill { font-size: 12.5px; padding: 6px 12px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
 .pill b { color: var(--text); }
 
-.cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+.cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }   /* 5 bộ mặt bằng (18/11/2026: + Âm thanh PA) */
 .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px 16px;
   border-top: 4px solid var(--c); display: flex; flex-direction: column; color: inherit; text-decoration: none; }
 .card:hover { box-shadow: 0 0 0 1px var(--c), var(--shadow); }
@@ -130,6 +131,7 @@ main { max-width: 1440px; margin: 0 auto; padding: 28px 32px 40px; }
 .card.control { --c: var(--c-control); --cs: var(--cs-control); }
 .card.ocam { --c: var(--c-ocam); --cs: var(--cs-ocam); }
 .card.tel { --c: var(--c-tel); --cs: var(--cs-tel); }
+.card.pa { --c: var(--c-pa); --cs: var(--cs-pa); }
 .card .head { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--h); font-size: 15px; }
 .card .ico { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--cs); color: var(--c); }
 .card .big { font-size: 38px; font-weight: 800; color: var(--text); margin: 14px 0 2px; line-height: 1; }
@@ -222,6 +224,7 @@ aside h5 { margin: 14px 8px 6px; font-size: 11px; font-weight: 700; color: var(-
 .st-sl { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
 .st-sl b { color: var(--text); font-size: 13px; }
 .st-nh { font-size: 11px; color: var(--accent); margin-top: 1px; }
+.st-gc { font-size: 11px; color: var(--muted); margin-top: 1px; text-align: center; line-height: 1.25; white-space: nowrap; }   /* ghi chú dưới ô (vd. AP = ổ cứng) */
 .st.kh .st-img { width: 60px; }                        /* ô ký hiệu bản vẽ A3 */
 .st.kh .st-img img { height: auto; max-height: 54px; max-width: 54px; }
 
@@ -355,7 +358,8 @@ aside h5 { margin: 14px 8px 6px; font-size: 11px; font-weight: 700; color: var(-
 .ly-chip b { font-size: 26px; color: var(--k); }
 .chua-lam { --k: #9ba7b9; } .thieu { --k: #6ea8ff; } .chenh { --k: #f5b041; } .xung-dot { --k: #ff7b72; }
 .ly-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; align-items: start; }
-.ly-sec { background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--k); border-radius: var(--radius); padding: 14px 18px 8px; }
+.ly-sec { background: var(--card); border: 1px solid var(--line); border-top: 3px solid var(--k); border-radius: var(--radius);
+  padding: 14px 18px 8px; scroll-margin-top: 12px; }
 .ly-sec h3 { display: flex; align-items: center; gap: 10px; margin: 0 0 8px; font-size: 15px; color: var(--h); }
 .ly-sec h3 .num { margin-left: auto; color: var(--k); font-size: 13px; background: var(--chip-bg); border-radius: 99px; padding: 1px 9px; }
 .ly-ico { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: var(--k); background: var(--chip-bg); flex: none; }
@@ -363,6 +367,8 @@ aside h5 { margin: 14px 8px 6px; font-size: 11px; font-weight: 700; color: var(-
 .ly-sec li { color: var(--muted); font-size: 13.5px; line-height: 1.5; margin-bottom: 8px; }
 .ly-sec li::marker { color: var(--k); }
 .ly-sec li b { color: var(--text); }
+.ly-ai { display: inline-block; font-size: 11.5px; font-weight: 600; line-height: 1.6; color: var(--k); background: var(--chip-bg);
+  border-radius: 99px; padding: 0 8px; white-space: nowrap; }
 .ly-src { color: var(--muted); font-size: 12.5px; margin-top: 16px; }
 
 /* =================== màn hình vừa (máy tính bảng, laptop nhỏ) =================== */

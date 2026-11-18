@@ -3,18 +3,19 @@
    Dữ liệu: js/data.js (window.DATA) – tạo bằng script xuất bản của dự án (xuat_ban_website.py), không sửa tay.
 
    - Tổng quan: số liệu, bảng theo khu vực, cách xem, cách đọc mã nhãn.
-   - 4 tab mặt bằng dùng chung một khung: Camera (mã + IP), Control, Ổ cắm & tủ điện, TEL-DATA & Wi-Fi (chỉ mã):
+   - 5 tab mặt bằng dùng chung một khung: Camera (mã + IP), Control, Ổ cắm & tủ điện, TEL-DATA & Wi-Fi, Âm thanh PA (chỉ mã):
      - Rê chuột vào thiết bị: phóng to ký hiệu + mã (+ IP). Click / chạm: giữ phóng to 5 giây, đếm ngược từng giây.
      - Lăn chuột / kéo: xem bản vẽ. Điện thoại: kéo 1 ngón, chụm 2 ngón để phóng to. Bản đồ nhỏ: tới vị trí.
      - Nút +: mở/đóng chú giải. Nút ⋮⋮⋮: mở/đóng hình thiết bị (ảnh sản phẩm / ký hiệu, mã chữ vàng, số lượng);
        chọn hình rồi bấm × thì mặt bằng chỉ còn các loại đã chọn, bấm ⋮⋮⋮ lần nữa thì hiện lại tất cả.
        Điện thoại: giữ và kéo từng nút sang chỗ khác (nhớ vị trí trên máy người xem).
-   - Tìm mã/IP trên cả 4 bộ mặt bằng (↑ ↓ Enter).
-   - Tải về: 7 file. Lưu ý: các điểm còn thiếu / chênh lệch / cần xác minh.
+   - Tìm mã/IP trên cả 5 bộ mặt bằng (↑ ↓ Enter).
+   - Tải về: 8 file. Lưu ý: các điểm còn thiếu / chênh lệch / cần xác minh.
 
    Địa chỉ trang (gửi link cho đối tác):
      #tong-quan · #camera · #camera/2 (mặt bằng thứ 2 trong danh sách) · #tai-ve · #luu-y · #ma=T1-CH01 (mở đúng thiết bị)
    Phím tắt (máy tính): A / D – sang tab bên trái / bên phải; W / S – lên / xuống mặt bằng; đều chạy vòng.
+     Shift (nhấn riêng) = bấm nút +; Ctrl (nhấn riêng) = bấm nút ⋮⋮⋮; Space = nút "Hiện tất cả" khi đang lọc (18/11/2026).
    Tham số chụp ảnh kiểm tra: ?demo=phim&phim=D,S (giả lập nhấn phím) · ?demo=legend (mở chú giải) · ?demo=hinh (mở hình thiết bị)
    · ?demo=chon&chon=CN2,NG (đã chọn hình) · ?demo=loc&chon=CN2,NG (đã bấm ×, đang lọc) · ?demo=keo-hinh (giả lập kéo nút ⋮⋮⋮)
    · ?demo=search&q=<chuỗi> (danh sách gợi ý)
@@ -29,12 +30,13 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const MB = D.mat_bang;
   const LOGO = "assets/logo.png";            // logo bản sáng cho nền tối (tạo từ logo gốc)
-  const PLAN_TABS = ["camera", "control", "ocam", "tel"];
+  const PLAN_TABS = ["camera", "control", "ocam", "tel", "pa"];
   const INFO = {
     camera: { ten: "Camera", dv: "camera" },
     control: { ten: "Control", dv: "thiết bị" },
     ocam: { ten: "Ổ cắm & tủ điện", dv: "thiết bị" },
     tel: { ten: "TEL-DATA & Wi-Fi", dv: "điểm" },
+    pa: { ten: "Âm thanh PA", dv: "loa", khongIp: true },      // 18/11/2026: loa 100V – không dùng IP
   };
   const soTb = (p) => p.items.filter((i) => i.loai !== "RK").length;   // thiết bị trên mặt bằng, không tính tủ rack
   const isTrunking = (p) => p.nhom_trang.startsWith("Mặt bằng trunking");
@@ -46,6 +48,7 @@
     control: '<rect x="3" y="7" width="18" height="10" rx="5"/><circle cx="16" cy="12" r="3"/>',
     ocam: '<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M9.5 9.5v3M14.5 9.5v3M12 15.5v.5"/>',
     tel: '<path d="M5 12.5a10 10 0 0 1 14 0M8 15.5a5.5 5.5 0 0 1 8 0"/><circle cx="12" cy="18.5" r="1"/><path d="M2 9.5a14.5 14.5 0 0 1 20 0"/>',
+    pa: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9.2a4 4 0 0 1 0 5.6M18.3 6.5a8 8 0 0 1 0 11"/>',
     dl: '<path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/>',
     note: '<path d="M12 3.5 22 20H2z"/><path d="M12 10v4.5M12 17.2v.3"/>',
     search: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
@@ -62,6 +65,7 @@
     ["control", "Control", "control", D.tabs.control.so],
     ["ocam", "Ổ cắm & tủ điện", "ocam", D.tabs.ocam.so],
     ["tel", "TEL-DATA & Wi-Fi", "tel", D.tabs.tel.so],
+    ["pa", "Âm thanh PA", "pa", D.tabs.pa.so],
     ["tai-ve", "Tải về", "dl"],
     ["luu-y", "Lưu ý", "note", 0, true],
   ];
@@ -84,7 +88,7 @@
   $$("img[data-logo]").forEach((i) => (i.src = LOGO));
 
   let curTab = null, planTab = null;
-  const lastPage = { camera: 1, control: 1, ocam: 0, tel: 1 };   // mở sẵn Tầng 1 (ổ cắm: Tầng 1 + Phòng bảo vệ ở vị trí 0 sau khi sắp xếp)
+  const lastPage = { camera: 1, control: 1, ocam: 0, tel: 1, pa: 1 };   // mở sẵn Tầng 1 (ổ cắm: Tầng 1 + Phòng bảo vệ ở vị trí 0 sau khi sắp xếp)
   for (const t of PLAN_TABS) {
     const i = MB[t].findIndex((p) => p.khu_vuc.startsWith("Tầng 1"));
     if (i >= 0) lastPage[t] = i;
@@ -138,11 +142,11 @@
         <p>Trang này thay cho bộ bản vẽ PDF. Chọn một tab để xem từng mặt bằng: mỗi thiết bị có ký hiệu, mã nhãn và
         địa chỉ IP (nếu đã có) ngay cạnh vị trí lắp. Rê chuột hoặc chạm vào thiết bị để phóng to.</p></div>
       <div class="meta"><span class="pill">Cập nhật <b>${D.ngay}</b></span>
-        <span class="pill"><b>4</b> bộ mặt bằng · <b>${pages}</b> trang</span></div>
+        <span class="pill"><b>${cols.length}</b> bộ mặt bằng · <b>${pages}</b> trang</span></div>
     </section>
     <section class="cards">${cols.map((t) => {
       const x = D.tabs[t];
-      const ip = (x.co_ip ? `<span class="tag ok">${x.co_ip}/${x.so} có IP</span>` : `<span class="tag no">${x.ip_tu ? "Điểm trên mặt bằng: chưa có IP" : "Chỉ mã nhãn – chưa có IP"}</span>`)
+      const ip = (x.co_ip ? `<span class="tag ok">${x.co_ip}/${x.so} có IP</span>` : `<span class="tag no">${x.ip_tu ? "Điểm trên mặt bằng: chưa có IP" : INFO[t].khongIp ? "Chỉ mã nhãn – không dùng IP" : "Chỉ mã nhãn – chưa có IP"}</span>`)
         + (x.ip_tu ? ` <span class="tag ok">${x.ip_tu} thiết bị trong tủ có IP</span>` : "");
       return `<a class="card ${t}" href="#${t}">
         <div class="head"><span class="ico">${icon(t, 19)}</span>${INFO[t].ten}</div>
@@ -153,13 +157,13 @@
     <section class="grid2">
       <div class="panel"><h3>Số thiết bị theo khu vực</h3><div class="tbl-wrap">
         <table class="t num"><tr><th>Khu vực</th><th>Camera</th><th>Control</th><th>Ổ cắm &amp; tủ điện</th>
-          <th>TEL-DATA &amp; Wi-Fi</th><th>Tổng</th></tr>
+          <th>TEL-DATA &amp; Wi-Fi</th><th>Âm thanh PA</th><th>Tổng</th></tr>
         ${D.khu_vuc.map((r) => `<tr><td>${esc(r.khu_vuc)}</td>${cols.map((c) => (r[c] ? `<td>${r[c]}</td>` : `<td class="z">–</td>`)).join("")}
           <td><b>${sum(r)}</b></td></tr>`).join("")}
         <tr class="sum"><td>Tổng</td>${cols.map((c) => `<td>${tot[c]}</td>`).join("")}<td>${sum(tot)}</td></tr></table></div>
       </div>
       <div class="panel"><h3>Cách xem mặt bằng</h3><div class="howto">
-        ${[["Chọn tab và mặt bằng.", "Mỗi tab là một bộ bản vẽ; danh sách mặt bằng nằm bên trái (trên điện thoại: ô chọn phía trên bản vẽ). Hai nút bên phải mặt bằng: <span class='ib lg'>+</span> mở chú giải, <span class='ib hinh'>" + DOTS + "</span> mở hình thiết bị.<span class='chi-pc'> Phím <kbd>A</kbd> / <kbd>D</kbd>: sang tab bên trái / bên phải; <kbd>W</kbd> / <kbd>S</kbd>: lên / xuống mặt bằng trong danh sách.</span>"],
+        ${[["Chọn tab và mặt bằng.", "Mỗi tab là một bộ bản vẽ; danh sách mặt bằng nằm bên trái (trên điện thoại: ô chọn phía trên bản vẽ). Hai nút bên phải mặt bằng: <span class='ib lg'>+</span> mở chú giải, <span class='ib hinh'>" + DOTS + "</span> mở hình thiết bị.<span class='chi-pc'> Phím <kbd>A</kbd> / <kbd>D</kbd>: sang tab bên trái / bên phải; <kbd>W</kbd> / <kbd>S</kbd>: lên / xuống mặt bằng trong danh sách; <kbd>Shift</kbd>: mở / đóng chú giải; <kbd>Ctrl</kbd>: mở / đóng hình thiết bị; <kbd>Space</kbd>: hiện tất cả khi đang lọc.</span>"],
            ["Rê chuột vào thiết bị", "để phóng to ký hiệu, mã nhãn và IP. <b>Click (hoặc chạm)</b> để giữ phóng to trong 5 giây."],
            ["Tìm nhanh", "bằng ô tìm kiếm phía trên: gõ mã nhãn hoặc IP, trang sẽ mở đúng mặt bằng và chỉ vào thiết bị."],
            ["Lăn chuột để phóng to cả bản vẽ, kéo để di chuyển.", "Trên điện thoại: chụm hai ngón để phóng to. Khung nhỏ ở góc cho biết đang xem phần nào."]]
@@ -193,17 +197,19 @@
 
   /* ================= Lưu ý ================= */
   const LY_ICON = { "chua-lam": "note", thieu: "search", chenh: "ocam", "xung-dot": "note" };
+  /* Bố cục như bản cũ: 4 thẻ số lượng + lưới 2 cột theo hàng. Thứ tự nhóm do dữ liệu quyết định (chủ dự án 18/11/2026:
+     Đã có mã | Mâu thuẫn, rồi Chênh lệch | Chưa mã hóa). Nhãn nhỏ cuối mỗi dòng: bên cần cung cấp / xác nhận. */
   function renderNotes() {
     $("#ly").innerHTML = `
     <section class="hero"><div><h2>Lưu ý</h2>
       <p>Các điểm còn thiếu, chênh lệch hoặc cần xác minh tính đến ${D.ngay}. Mã và số lượng của các thiết bị
-      trong những mục này có thể thay đổi sau khi được xác nhận.</p></div></section>
+      trong những mục này có thể thay đổi sau khi được xác nhận. Nhãn nhỏ cuối mỗi dòng: bên cần cung cấp / xác nhận.</p></div></section>
     <div class="ly-ok">✓ ${esc(D.luu_y_camera)}</div>
     <div class="ly-chips">${D.luu_y.map((s) => `<button type="button" class="ly-chip ${s.loai}" data-to="ly-${s.loai}">
       <b class="num">${s.y.length}</b>${esc(s.tieu_de)}</button>`).join("")}</div>
     <div class="ly-grid">${D.luu_y.map((s) => `<section class="ly-sec ${s.loai}" id="ly-${s.loai}">
       <h3><span class="ly-ico">${icon(LY_ICON[s.loai], 17)}</span>${esc(s.tieu_de)}<span class="num">${s.y.length}</span></h3>
-      <ul>${s.y.map(([b, t]) => `<li><b>${esc(b)}:</b> ${esc(t)}</li>`).join("")}</ul></section>`).join("")}</div>
+      <ul>${s.y.map(([b, t, ai]) => `<li><b>${esc(b)}:</b> ${esc(t)}${ai ? ` <span class="ly-ai">${esc(ai)}</span>` : ""}</li>`).join("")}</ul></section>`).join("")}</div>
     <p class="ly-src">Nguồn: báo cáo ${esc(D.luu_y_nguon)}. Bản đầy đủ ở tab <a href="#tai-ve">Tải về</a>.</p>`;
     $$(".ly-chip").forEach((c) => c.addEventListener("click", () => $("#" + c.dataset.to).scrollIntoView({ block: "start" })));
   }
@@ -219,7 +225,8 @@
           role="button" tabindex="0" aria-pressed="${chon.has(i.ma)}" title="${esc(i.ten)} (${esc(i.model)})">
           <div class="st-img"><img src="${i.anh}" alt="${esc(i.ma)}"></div>
           <div class="st-ma">${esc(i.ma)}</div><div class="st-sl">Số lượng: <b class="num">${i.sl}</b></div>
-          ${i.ma_nhan && i.ma_nhan !== i.ma ? `<div class="st-nh">Nhãn: …-${esc(i.ma_nhan)}</div>` : ""}</div>`).join("")}
+          ${i.ma_nhan && i.ma_nhan !== i.ma ? `<div class="st-nh">Nhãn: …-${esc(i.ma_nhan)}</div>` : ""}${
+          i.ghi_chu ? `<div class="st-gc">${esc(i.ghi_chu).replace(" – ", " –<br>")}</div>` : ""}</div>`).join("")}
       </div></div>`).join("") + "</div>";
   }
   /* Nhãn trên mặt bằng: camera có mã + IP; thiết bị khác chỉ có mã (cỡ chữ theo bản vẽ, plan.fs). */
@@ -244,7 +251,7 @@
         <b class="num">${i.sl}</b></div>`).join("")}`).join("");
   }
 
-  /* ================= mặt bằng (dùng chung 4 tab) ================= */
+  /* ================= mặt bằng (dùng chung 5 tab) ================= */
   const cv = $("#cv");
   let PLANS = null, P = null, cur = -1, stage = null;
   const view = { tx: 0, ty: 0, z: 1 };
@@ -260,7 +267,7 @@
     $("#fit").innerHTML = `<span>Vừa màn hình</span>${icon("fit", 18)}`;
     lblBase = id === "camera"
       ? `<div class="lbl"><b>Mã nhãn</b><span>Địa chỉ IP</span></div> nhãn thiết bị`
-      : `<div class="lbl lbl1" style="--fs:13px"><b>Mã nhãn</b></div> nhãn thiết bị (chưa có IP)`;
+      : `<div class="lbl lbl1" style="--fs:13px"><b>Mã nhãn</b></div> nhãn thiết bị (${INFO[id].khongIp ? "loa không dùng IP" : "chưa có IP"})`;
     let grp = null, og = null;
     $("#floors").innerHTML = PLANS.map((p, i) => {
       const h = p.nhom_trang && p.nhom_trang !== grp ? `<h5>${esc((grp = p.nhom_trang))}</h5>` : "";
@@ -287,7 +294,7 @@
     closeRack();
     const n = soTb(P), nip = P.items.filter((i) => i.ip).length, nr = P.items.length - n;
     const ipTu = P.items.filter((i) => i.loai === "RK" && TU[i.ma]).reduce((s, i) => s + tbCoIp(TU[i.ma]).length, 0);
-    $("#count").textContent = (nip ? `${n} ${INFO[planTab].dv} · ${nip} có IP` : `${n} ${INFO[planTab].dv} · chưa có IP`)
+    $("#count").textContent = (nip ? `${n} ${INFO[planTab].dv} · ${nip} có IP` : `${n} ${INFO[planTab].dv} · ${INFO[planTab].khongIp ? "không dùng IP" : "chưa có IP"}`)
       + (nr ? ` · ${nr} tủ rack` + (ipTu ? ` (${ipTu} IP trong tủ)` : "") : "");
     renderStrip(stp, P);
     renderLegend(lgp, P);
@@ -418,7 +425,7 @@
     const n = all.filter((x) => F.has(x.loai)).length;
     const vang = [...F].filter((c) => !all.some((x) => x.loai === c));
     chip.innerHTML = `<span>Đang lọc:</span>${[...F].map((c) => `<b>${esc(c)}</b>`).join("")}
-      <span class="n">${n}/${all.length} ký hiệu</span><button type="button" id="loc-bo">Hiện tất cả</button>${
+      <span class="n">${n}/${all.length} ký hiệu</span><button type="button" id="loc-bo" title="Hiện tất cả (phím Space)">Hiện tất cả</button>${
       vang.length ? `<small>${vang.map(esc).join(", ")}: ${vang.some((c) => P.dai_anh.some((g) => g.items.some((i) => i.ma === c)))
         ? "không có ký hiệu riêng trên mặt bằng" : "không có trên mặt bằng này"}</small>` : ""}`;
     chip.hidden = false;
@@ -612,9 +619,9 @@
   const XMARK = '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M4 4l10 10M14 4 4 14" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></svg>';
   const FLOAT = [
     { btn: $("#lg-btn"), panel: $("#lgp"), key: "ma-ip.vi-tri-nut-chu-giai", width: 370,
-      show: (b, open) => { b.textContent = open ? "−" : "+"; b.title = open ? "Đóng chú giải" : "Mở chú giải"; } },
+      show: (b, open) => { b.textContent = open ? "−" : "+"; b.title = (open ? "Đóng chú giải" : "Mở chú giải") + (isPC() ? " (phím Shift)" : ""); } },
     { btn: $("#st-btn"), panel: $("#stp"), key: "ma-ip.vi-tri-nut-hinh-thiet-bi", width: 0,
-      show: (b, open) => { b.innerHTML = open ? XMARK : DOTS; b.title = open ? "Đóng hình thiết bị" : "Mở hình thiết bị"; } },
+      show: (b, open) => { b.innerHTML = open ? XMARK : DOTS; b.title = (open ? "Đóng hình thiết bị" : "Mở hình thiết bị") + (isPC() ? " (phím Ctrl)" : ""); } },
   ];
   const lgp = FLOAT[0].panel, stp = FLOAT[1].panel;
   function placeBtn(f) {
@@ -778,7 +785,7 @@
   }
   const moTu = (i) => (P.items[i].loai === "RK" && TU[P.items[i].ma] ? (openRack(P.items[i].ma), true) : false);
 
-  /* ================= tìm kiếm (4 bộ mặt bằng) ================= */
+  /* ================= tìm kiếm (5 bộ mặt bằng) ================= */
   const ALL = PLAN_TABS.flatMap((t) => MB[t].flatMap((p, pi) => p.items.map((it, i) => ({
     ma: it.ma, ip: it.ip, t, pi, i, kv: `${INFO[t].ten} · ${p.khu_vuc}${isTrunking(p) ? " · trunking" : ""}` }))));
   for (const R of D.tu_rack || []) {
@@ -866,7 +873,7 @@
 
   /* phím tắt – CHỈ MÁY TÍNH (có chuột, màn hình > 760px), không có trên điện thoại (chủ dự án đổi phím 16/11/2026):
      - A / D: tab bên trái / bên phải, chạy vòng (Tổng quan ←A→ Lưu ý).
-     - W / S: mặt bằng phía trên / phía dưới trong danh sách bên trái (chỉ ở 4 tab mặt bằng), chạy vòng qua cả danh sách
+     - W / S: mặt bằng phía trên / phía dưới trong danh sách bên trái (chỉ ở 5 tab mặt bằng), chạy vòng qua cả danh sách
        – tab Ổ cắm: "Mặt bằng ổ cắm & tủ điện" Tầng 4 ←S→ "Mặt bằng trunking – tủ điện" Tầng hầm, và trunking Tầng 4 ←S→ ổ cắm Tầng hầm.
      Bộ gõ tiếng Việt kiểu Telex (Unikey, EVKey…) chạy cả khi không gõ vào ô chữ: khi cần đổi chữ, nó NUỐT phím vừa bấm,
      gửi Backspace rồi gửi chữ mới KHÔNG có mã phím. Ví dụ: "dd" → "đ", "aa" → "â", "w" → "ư", "as" → "á" (S là dấu sắc),
@@ -942,6 +949,37 @@
       bam(phimTuChu(g.cuoi, g.truocDo), g.t);
     }, 25);
   });
+  /* Shift / Ctrl NHẤN RIÊNG (chủ dự án 18/11/2026): Shift = bấm nút + (chú giải), Ctrl = bấm nút ⋮⋮⋮ (hình thiết bị),
+     y như click chuột – kể cả đóng ⋮⋮⋮ khi đã chọn hình thì mặt bằng chỉ còn loại đã chọn. Chỉ tính khi nhấn rồi nhả đúng phím đó
+     mà KHÔNG kèm phím khác, click hay lăn chuột – nên Ctrl+C, Ctrl + lăn chuột, Shift + chữ hoa… vẫn như cũ.
+     Chỉ máy tính, chỉ ở 5 tab mặt bằng, bỏ qua khi đang gõ trong ô tìm kiếm / ô chọn. Bộ gõ Telex không đổi phím Shift / Ctrl. */
+  const NHAN_RIENG = { Shift: 0, Control: 1 };
+  let rieng = null;                                   // { k: phím đang nhấn riêng } · { k: null } = đã bị huỷ (có kèm thao tác khác)
+  const dangGo = (e) => e.target && e.target.closest && e.target.closest("input, textarea, select, [contenteditable]");
+  document.addEventListener("keydown", (e) => {
+    if (e.repeat) return;
+    if (e.key in NHAN_RIENG) rieng = rieng ? { k: null } : { k: e.key };
+    else if (rieng) rieng = { k: null };
+  }, true);
+  document.addEventListener("keyup", (e) => {
+    if (!(e.key in NHAN_RIENG)) return;
+    const ok = rieng && rieng.k === e.key;
+    rieng = null;
+    if (!ok || !isPC() || !PLAN_TABS.includes(curTab) || dangGo(e) || !$("#v-mat-bang") || $("#v-mat-bang").hidden) return;
+    const f = FLOAT[NHAN_RIENG[e.key]];
+    setPanel(f, f.panel.hidden);                       // giống click vào nút
+  }, true);
+  for (const ev of ["pointerdown", "wheel"]) window.addEventListener(ev, () => { if (rieng) rieng = { k: null }; }, { capture: true, passive: true });
+  /* Space = nút "Hiện tất cả" (chủ dự án 18/11/2026): chỉ khi mặt bằng đang lọc (nhãn "Đang lọc" hiện). Không lọc thì Space giữ
+     tác dụng mặc định của trình duyệt. Bỏ qua khi đang gõ chữ; khi đang lọc, Space không bấm nút đang được chọn (focus) mà bỏ lọc. */
+  document.addEventListener("keydown", (e) => {
+    if (e.code !== "Space" || e.repeat || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey) return;
+    if (!isPC() || !PLAN_TABS.includes(curTab) || dangGo(e) || !filter[planTab]) return;
+    e.preventDefault();
+    clearFilter();
+  });
+  window.addEventListener("blur", () => { rieng = null; });
+
   renderOverview();
   renderDownloads();
   renderNotes();
@@ -964,8 +1002,16 @@
     for (const c of (Q.get("chon") || "").split(",")) { const el = $$(".st", stp).find((e) => e.dataset.ma === c); if (el) toggleTile(el); }
     if (demo === "loc") setPanel(FLOAT[1], false);
   }
-  if (demo === "phim") for (const k of (Q.get("phim") || "").split(",").filter(Boolean)) {
-    document.dispatchEvent(new KeyboardEvent("keydown", { code: "Key" + k.toUpperCase(), key: k.toLowerCase(), bubbles: true }));
+  // ?demo=phim&phim=D,S | Shift | Control | Space [&chon=CN2&phim2=Control,Space]: giả lập phím (Shift/Control = nhấn rồi nhả), chọn hình, phím lần 2
+  const nhanPhim = (k) => {
+    if (k === "Space") document.dispatchEvent(new KeyboardEvent("keydown", { code: "Space", key: " ", bubbles: true }));
+    else if (k in NHAN_RIENG) ["keydown", "keyup"].forEach((t) => document.dispatchEvent(new KeyboardEvent(t, { key: k, code: k + "Left", bubbles: true })));
+    else document.dispatchEvent(new KeyboardEvent("keydown", { code: "Key" + k.toUpperCase(), key: k.toLowerCase(), bubbles: true }));
+  };
+  if (demo === "phim") {
+    (Q.get("phim") || "").split(",").filter(Boolean).forEach(nhanPhim);
+    for (const c of (Q.get("chon") || "").split(",").filter(Boolean)) { const el = $$(".st", stp).find((e) => e.dataset.ma === c); if (el) toggleTile(el); }
+    (Q.get("phim2") || "").split(",").filter(Boolean).forEach(nhanPhim);
   }
   if (Q.get("demo") === "search") { top.classList.add("tim"); input.value = Q.get("q") || "CX0"; renderDrop(); }
   if (demo === "xem-tu" && PLAN_TABS.includes(curTab)) {      // phóng to quanh tủ (gồm bảng IP cạnh tủ), không mở khung tủ
