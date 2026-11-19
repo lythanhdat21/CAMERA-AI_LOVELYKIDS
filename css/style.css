@@ -33,6 +33,7 @@
   --c-ocam: #f5b041; --cs-ocam: rgba(245, 176, 65, .16);
   --c-tel: #a897ff; --cs-tel: rgba(168, 151, 255, .16);
   --c-pa: #ff7eb6; --cs-pa: rgba(255, 126, 182, .16);   /* 18/11/2026 – cùng màu nhóm Âm thanh PA trong khung tủ rack */
+  --c-tu: #ff9a3c; --cs-tu: rgba(255, 154, 60, .16);    /* 19/11/2026 – tab Tủ Rack & Tủ KNX, cùng màu thẻ tủ */
 
   /* mặt bằng */
   --canvas: #151920;
@@ -122,7 +123,7 @@ main { max-width: 1440px; margin: 0 auto; padding: 28px 32px 40px; }
 .pill { font-size: 12.5px; padding: 6px 12px; border-radius: 99px; background: var(--card); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
 .pill b { color: var(--text); }
 
-.cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }   /* 5 bộ mặt bằng (18/11/2026: + Âm thanh PA) */
+.cards { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }   /* 6 bộ mặt bằng (18/11/2026: + Âm thanh PA; 19/11/2026: + Tủ) */
 .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 20px 16px;
   border-top: 4px solid var(--c); display: flex; flex-direction: column; color: inherit; text-decoration: none; }
 .card:hover { box-shadow: 0 0 0 1px var(--c), var(--shadow); }
@@ -132,6 +133,7 @@ main { max-width: 1440px; margin: 0 auto; padding: 28px 32px 40px; }
 .card.ocam { --c: var(--c-ocam); --cs: var(--cs-ocam); }
 .card.tel { --c: var(--c-tel); --cs: var(--cs-tel); }
 .card.pa { --c: var(--c-pa); --cs: var(--cs-pa); }
+.card.tu { --c: var(--c-tu); --cs: var(--cs-tu); }
 .card .head { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--h); font-size: 15px; }
 .card .ico { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; background: var(--cs); color: var(--c); }
 .card .big { font-size: 38px; font-weight: 800; color: var(--text); margin: 14px 0 2px; line-height: 1; }
@@ -529,5 +531,49 @@ aside h5 { margin: 14px 8px 6px; font-size: 11px; font-weight: 700; color: var(-
 .canvas.focus .stage .ip-tu { opacity: .3; }
 .lbl-demo { flex-direction: column; align-items: stretch; }
 .lbl-demo-r { display: flex; align-items: center; gap: 10px; }
+.lbl-demo-r.cot { flex-direction: column; align-items: flex-start; gap: 6px; }   /* mẫu thẻ tủ (tab Tủ): chữ dưới mẫu */
 .ip-tu.mau { position: static; cursor: default; }
 .rk-tags span.mang { background: rgba(52, 209, 188, .12); color: var(--muted); }
+
+/* ===== tủ KNX (18/11/2026): khung mặt trước tủ (thanh DIN) + danh sách module ===== */
+.kp-ico { background: rgba(255, 138, 40, .16); color: #ff9a3c; }
+.rk-h .sub b { color: var(--text); }
+.rk-tags span.kp-ok { background: rgba(80, 200, 120, .16); color: #7fe0a0; }
+.rk-tags span.kp-du { background: rgba(255, 181, 71, .16); color: #ffc46b; }
+.kp-el { flex: 0 0 256px; }
+.kp-plate { border: 3px solid #4a5568; border-radius: 6px; background: #12161c; padding: 8px 6px 6px; display: flex; flex-direction: column; gap: 10px; }
+.kp-rail { display: flex; gap: 3px; padding: 2px 0; background: linear-gradient(#12161c 0 40%, #3a4352 40% 60%, #12161c 60%); min-height: 64px; }
+.kp-m { border-radius: 3px; background: color-mix(in srgb, var(--c) 22%, #1d232c); border: 1.5px solid var(--c); padding: 4px 4px;
+  display: flex; flex-direction: column; justify-content: center; gap: 2px; overflow: hidden; min-width: 0; }
+.kp-m b { color: #fff; font-size: 10.5px; white-space: nowrap; }
+.kp-m span { color: #c7d0dc; font-size: 8.5px; letter-spacing: -.1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kp-m.phu { border-style: dashed; justify-content: center; }
+.kp-m.phu b { color: #c7d0dc; font-size: 9.5px; white-space: normal; text-align: center; }
+.kp-m.chon { outline: 2px solid #fff; outline-offset: 1px; }
+.kp-bar { height: 16px; border-radius: 3px; background: #6b4a1f; border: 1px solid #b07a2c; color: #f1d7a8; font-size: 9px;
+  display: grid; place-items: center; letter-spacing: .3px; }
+.kp-note { color: #6b778a; font-size: 10.5px; margin-top: 5px; }
+.kp-anh { margin: 10px 0 0; }
+.kp-anh img { width: 100%; max-width: 200px; border-radius: 6px; border: 1px solid var(--line); display: block; }
+.kp-anh figcaption { color: var(--muted); font-size: 10.5px; margin-top: 3px; }
+.kp-it { cursor: pointer; }
+.kp-it:hover { background: #2a313d; }
+.kp-it .d i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
+/* thẻ module trong tủ KNX đặt cạnh tủ trên mặt bằng (dùng chung khung .ip-tu) */
+.ip-tu.kp-tu { border-color: var(--mau-the, #ff8a28); }
+.ip-tu.kp-tu .h { color: var(--mau-the, #ff9a3c); }   /* --mau-the: tủ sát tủ khác có màu riêng (19/11/2026) */
+.ip-tu.kp-tu { display: grid; grid-template-columns: .55em auto auto; column-gap: .45em; align-items: center; }
+.ip-tu.kp-tu .h, .ip-tu.kp-tu .f { grid-column: 1 / -1; }
+.ip-tu.kp-tu .r { display: contents; }
+.ip-tu.kp-tu .r > * { justify-self: start; }
+.ip-tu.kp-tu .r span { color: var(--text); }
+.ip-tu.kp-tu .r em { font-style: normal; color: var(--muted); font-size: .86em; }
+.ip-tu.kp-tu .f { color: var(--muted); font-size: .8em; margin-top: .2em; }
+.ip-tu.kp-tu:hover { box-shadow: 0 0 0 max(.6px, calc(var(--fs) * .12)) rgba(255, 138, 40, .45); }
+.stage line.ip-tu-day.kp { stroke: #ff8a28; stroke-dasharray: 2.4 1.6; }
+.stage path.ip-tu-u { fill: #ff8a28; stroke: none; }
+/* thẻ tủ rack (tab Tủ, 19/11/2026): khung thẻ tủ KNX, cột phải là IP */
+.ip-tu.kp-tu.rk-the .r span { color: var(--lbl-ip); }
+.ip-tu.kp-tu.mau { display: inline-grid; position: static; cursor: default; }
+.kp-hint { color: #6b778a; font-size: 10.5px; margin: 2px 0 0 2px; }
+@media (max-width: 760px) { .kp-el { flex: none; } .kp-anh { display: none; } }

@@ -3,13 +3,18 @@
    Dữ liệu: js/data.js (window.DATA) – tạo bằng script xuất bản của dự án (xuat_ban_website.py), không sửa tay.
 
    - Tổng quan: số liệu, bảng theo khu vực, cách xem, cách đọc mã nhãn.
-   - 5 tab mặt bằng dùng chung một khung: Camera (mã + IP), Control, Ổ cắm & tủ điện, TEL-DATA & Wi-Fi, Âm thanh PA (chỉ mã):
+   - 6 tab mặt bằng dùng chung một khung: Camera (mã + IP), Control, Ổ cắm, TEL-DATA & Wi-Fi, Âm thanh PA (chỉ mã), Tủ Rack & Tủ KNX:
      - Rê chuột vào thiết bị: phóng to ký hiệu + mã (+ IP). Click / chạm: giữ phóng to 5 giây, đếm ngược từng giây.
      - Lăn chuột / kéo: xem bản vẽ. Điện thoại: kéo 1 ngón, chụm 2 ngón để phóng to. Bản đồ nhỏ: tới vị trí.
      - Nút +: mở/đóng chú giải. Nút ⋮⋮⋮: mở/đóng hình thiết bị (ảnh sản phẩm / ký hiệu, mã chữ vàng, số lượng);
        chọn hình rồi bấm × thì mặt bằng chỉ còn các loại đã chọn, bấm ⋮⋮⋮ lần nữa thì hiện lại tất cả.
        Điện thoại: giữ và kéo từng nút sang chỗ khác (nhớ vị trí trên máy người xem).
-   - Tìm mã/IP trên cả 5 bộ mặt bằng (↑ ↓ Enter).
+   - Tab "Tủ Rack & Tủ KNX" (chủ dự án 19/11/2026): mỗi tầng 1 mặt bằng (nền bản vẽ control, đã xoá ký hiệu thiết bị) chỉ có tủ + mã + thẻ tủ.
+     6 tủ rack (bấm tủ → khung tủ chia U) – thẻ: thiết bị trong tủ có IP; 13 tủ KNX (Tầng 1 từ 18/11/2026; các tầng khác dự kiến, ưu tiên
+     đặt trong WC) – thẻ: module KNX + model + phụ kiện; bấm thẻ / tủ → khung tủ. Thẻ đặt ngoài khối nhà, dây nét đứt cam có "cục u" ở mép thẻ.
+     Tab Camera không còn ký hiệu NG (và cụm đầu ghi Tầng 1) ở tầng có tủ; tab Control không còn module KNX; tab TEL-DATA không còn T1-RK02.
+   - Tab "Ổ cắm" (19/11/2026): chỉ ổ cắm – tủ điện (T…-PN…) không thuộc phạm vi cấp, đã bỏ; bỏ 5 mặt bằng trunking (chỉ có tủ điện).
+   - Tìm mã/IP trên cả 6 bộ mặt bằng (↑ ↓ Enter); mã thiết bị trong tủ (rack, KNX) mở khung tủ chứa nó ở tab Tủ.
    - Tải về: 8 file. Lưu ý: các điểm còn thiếu / chênh lệch / cần xác minh.
 
    Địa chỉ trang (gửi link cho đối tác):
@@ -21,6 +26,7 @@
    · ?demo=chon-cg&chon=… / ?demo=loc-cg&chon=… (như trên, chọn trong khung chú giải +) · ?demo=keo-hinh (giả lập kéo nút ⋮⋮⋮)
    · ?demo=search&q=<chuỗi> (danh sách gợi ý)
    · ?demo=xem-tu&tu=<mã tủ>&pad=<hệ số> (phóng quanh tủ + bảng IP, không mở khung tủ)
+   · #ma=T1-KP01 mở khung tủ KNX (tab Tủ Rack & Tủ KNX)
    Bảng IP cạnh tủ: chủ dự án duyệt 17/11/2026 phương án "mọi thiết bị có IP trong tủ" (PA2, docs 2026-11-17_09). */
 (() => {
   "use strict";
@@ -31,15 +37,19 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
   const MB = D.mat_bang;
   const LOGO = "assets/logo.png";            // logo bản sáng cho nền tối (tạo từ logo gốc)
-  const PLAN_TABS = ["camera", "control", "ocam", "tel", "pa"];
+  const PLAN_TABS = ["camera", "control", "ocam", "tel", "pa", "tu"];
   const INFO = {
     camera: { ten: "Camera", dv: "camera" },
     control: { ten: "Control", dv: "thiết bị" },
-    ocam: { ten: "Ổ cắm & tủ điện", dv: "thiết bị" },
+    ocam: { ten: "Ổ cắm", dv: "ổ cắm" },                       // 19/11/2026: bỏ tủ điện (không thuộc phạm vi cấp)
     tel: { ten: "TEL-DATA & Wi-Fi", dv: "điểm" },
     pa: { ten: "Âm thanh PA", dv: "loa", khongIp: true },      // 18/11/2026: loa 100V – không dùng IP
+    tu: { ten: "Tủ Rack & Tủ KNX", dv: "tủ" },                  // 19/11/2026
   };
-  const soTb = (p) => p.items.filter((i) => i.loai !== "RK").length;   // thiết bị trên mặt bằng, không tính tủ rack
+  const LA_TU = new Set(["RK", "KP"]);                                   // tủ rack, tủ KNX (18/11/2026)
+  // số trên danh sách mặt bằng: tab Tủ = số tủ; tab khác = thiết bị trên mặt bằng + module KNX của tầng (Control, so_trong – nằm ở tab Tủ)
+  const soTb = (p) => (p.tab === "tu" ? p.items.length : p.items.length + (p.so_trong || 0));
+  const quaLoc = (F, loai, trong) => !F || F.has(loai) || (trong || []).some((c) => F.has(c));   // tủ KNX qua lọc nếu chứa loại đã chọn
   const isTrunking = (p) => p.nhom_trang.startsWith("Mặt bằng trunking");
 
   /* ================= biểu tượng ================= */
@@ -54,6 +64,7 @@
     note: '<path d="M12 3.5 22 20H2z"/><path d="M12 10v4.5M12 17.2v.3"/>',
     search: '<circle cx="11" cy="11" r="6.5"/><path d="m16 16 4.5 4.5"/>',
     fit: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+    tu: '<rect x="5" y="2.5" width="14" height="17" rx="1.5"/><path d="M8 7h8M8 11h8M8 15h8M7 19.5V22M17 19.5V22"/>',
   };
   const icon = (k, size = 18) =>
     `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -64,9 +75,10 @@
     ["tong-quan", "Tổng quan", "home"],
     ["camera", "Camera", "camera", D.tabs.camera.so],
     ["control", "Control", "control", D.tabs.control.so],
-    ["ocam", "Ổ cắm & tủ điện", "ocam", D.tabs.ocam.so],
+    ["ocam", "Ổ cắm", "ocam", D.tabs.ocam.so],
     ["tel", "TEL-DATA & Wi-Fi", "tel", D.tabs.tel.so],
     ["pa", "Âm thanh PA", "pa", D.tabs.pa.so],
+    ["tu", "Tủ Rack & Tủ KNX", "tu", D.tabs.tu.so],
     ["tai-ve", "Tải về", "dl"],
     ["luu-y", "Lưu ý", "note", 0, true],
   ];
@@ -89,7 +101,7 @@
   $$("img[data-logo]").forEach((i) => (i.src = LOGO));
 
   let curTab = null, planTab = null;
-  const lastPage = { camera: 1, control: 1, ocam: 0, tel: 1, pa: 1 };   // mở sẵn Tầng 1 (ổ cắm: Tầng 1 + Phòng bảo vệ ở vị trí 0 sau khi sắp xếp)
+  const lastPage = { camera: 1, control: 1, ocam: 1, tel: 1, pa: 1, tu: 1 };   // mở sẵn Tầng 1
   for (const t of PLAN_TABS) {
     const i = MB[t].findIndex((p) => p.khu_vuc.startsWith("Tầng 1"));
     if (i >= 0) lastPage[t] = i;
@@ -147,8 +159,8 @@
     </section>
     <section class="cards">${cols.map((t) => {
       const x = D.tabs[t];
-      const ip = (x.co_ip ? `<span class="tag ok">${x.co_ip}/${x.so} có IP</span>` : `<span class="tag no">${x.ip_tu ? "Điểm trên mặt bằng: chưa có IP" : INFO[t].khongIp ? "Chỉ mã nhãn – không dùng IP" : "Chỉ mã nhãn – chưa có IP"}</span>`)
-        + (x.ip_tu ? ` <span class="tag ok">${x.ip_tu} thiết bị trong tủ có IP</span>` : "");
+      const ip = t === "tu" ? `<span class="tag ok">${x.ip_tu} thiết bị trong tủ rack có IP</span>`     // tủ không có IP riêng
+        : x.co_ip ? `<span class="tag ok">${x.co_ip}/${x.so} có IP</span>` : `<span class="tag no">${INFO[t].khongIp ? "Chỉ mã nhãn – không dùng IP" : "Chỉ mã nhãn – chưa có IP"}</span>`;
       return `<a class="card ${t}" href="#${t}">
         <div class="head"><span class="ico">${icon(t, 19)}</span>${INFO[t].ten}</div>
         <div class="big num">${x.so}</div><div class="unit">${INFO[t].dv} · ${x.trang} trang mặt bằng</div>
@@ -157,8 +169,8 @@
     }).join("")}</section>
     <section class="grid2">
       <div class="panel"><h3>Số thiết bị theo khu vực</h3><div class="tbl-wrap">
-        <table class="t num"><tr><th>Khu vực</th><th>Camera</th><th>Control</th><th>Ổ cắm &amp; tủ điện</th>
-          <th>TEL-DATA &amp; Wi-Fi</th><th>Âm thanh PA</th><th>Tổng</th></tr>
+        <table class="t num"><tr><th>Khu vực</th><th>Camera</th><th>Control</th><th>Ổ cắm</th>
+          <th>TEL-DATA &amp; Wi-Fi</th><th>Âm thanh PA</th><th>Tủ Rack &amp; Tủ KNX</th><th>Tổng</th></tr>
         ${D.khu_vuc.map((r) => `<tr><td>${esc(r.khu_vuc)}</td>${cols.map((c) => (r[c] ? `<td>${r[c]}</td>` : `<td class="z">–</td>`)).join("")}
           <td><b>${sum(r)}</b></td></tr>`).join("")}
         <tr class="sum"><td>Tổng</td>${cols.map((c) => `<td>${tot[c]}</td>`).join("")}<td>${sum(tot)}</td></tr></table></div>
@@ -259,7 +271,7 @@
       }).join("")}`).join("");
   }
 
-  /* ================= mặt bằng (dùng chung 5 tab) ================= */
+  /* ================= mặt bằng (dùng chung 6 tab) ================= */
   const cv = $("#cv");
   let PLANS = null, P = null, cur = -1, stage = null;
   const view = { tx: 0, ty: 0, z: 1 };
@@ -270,11 +282,13 @@
     planTab = id;
     PLANS = MB[id];
     const pdf = $("#pdf");
-    pdf.href = D.tabs[id].pdf;
+    pdf.hidden = !D.tabs[id].pdf;                    // tab Tủ: không có bản PDF riêng
+    if (D.tabs[id].pdf) pdf.href = D.tabs[id].pdf;
     pdf.innerHTML = icon("dl", 16) + " Tải PDF";
     $("#fit").innerHTML = `<span>Vừa màn hình</span>${icon("fit", 18)}`;
     lblBase = id === "camera"
       ? `<div class="lbl"><b>Mã nhãn</b><span>Địa chỉ IP</span></div> nhãn thiết bị`
+      : id === "tu" ? `<div class="lbl lbl1" style="--fs:13px"><b>Mã tủ</b></div> nhãn tủ (tủ không có IP)`
       : `<div class="lbl lbl1" style="--fs:13px"><b>Mã nhãn</b></div> nhãn thiết bị (${INFO[id].khongIp ? "loa không dùng IP" : "chưa có IP"})`;
     let grp = null, og = null;
     $("#floors").innerHTML = PLANS.map((p, i) => {
@@ -300,10 +314,14 @@
     $("#floor-sel").value = String(idx);
     $("#crumb").innerHTML = `${esc(INFO[planTab].ten)} <span>›</span> ${esc(P.khu_vuc)}${isTrunking(P) ? " <span>· trunking</span>" : ""}`;
     closeRack();
-    const n = soTb(P), nip = P.items.filter((i) => i.ip).length, nr = P.items.length - n;
+    const n = soTb(P), nip = P.items.filter((i) => i.ip).length, nr = P.items.filter((i) => i.loai === "RK").length;
+    const nk = P.items.filter((i) => i.loai === "KP").length;
     const ipTu = P.items.filter((i) => i.loai === "RK" && TU[i.ma]).reduce((s, i) => s + tbCoIp(TU[i.ma]).length, 0);
-    $("#count").textContent = (nip ? `${n} ${INFO[planTab].dv} · ${nip} có IP` : `${n} ${INFO[planTab].dv} · ${INFO[planTab].khongIp ? "không dùng IP" : "chưa có IP"}`)
-      + (nr ? ` · ${nr} tủ rack` + (ipTu ? ` (${ipTu} IP trong tủ)` : "") : "");
+    const nTrong = P.items.reduce((s, i) => s + (i.loai === "KP" ? (i.trong || []).length : 0), 0);
+    $("#count").textContent = planTab === "tu"
+      ? [nr && `${nr} tủ rack` + (ipTu ? ` (${ipTu} thiết bị có IP)` : ""), nk && `${nk} tủ KNX (${nTrong} module)`].filter(Boolean).join(" · ")
+      : (nip ? `${n} ${INFO[planTab].dv} · ${nip} có IP` : `${n} ${INFO[planTab].dv} · ${INFO[planTab].khongIp ? "không dùng IP" : "chưa có IP"}`)
+        + (P.so_trong ? ` · gồm ${P.so_trong} module KNX ở tab Tủ` : "");
     renderStrip(stp, P);
     renderLegend(lgp, P);
     if (stage) stage.remove();
@@ -312,11 +330,13 @@
     stage.style.width = P.w + "px";
     stage.style.height = P.h + "px";
     const lw = Math.max(0.3, P.fs * 0.09);
+    P.mau = mauTuSat();
     let h = `<div class="bg" style="background-image:url(${P.img})"></div>
       <div class="clip" style="left:${P.clip_x1}px"></div><div class="loc-layer"></div><svg width="${P.w}" height="${P.h}">`;
     P.items.forEach((it, i) => {
       const [a, b] = it.leader;
-      h += `<g data-i="${i}"><line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" style="stroke-width:${lw}"/><circle cx="${a[0]}" cy="${a[1]}" r="${lw * 2}"/></g>`;
+      const m = P.mau[i] ? `;stroke:${P.mau[i]};fill:${P.mau[i]}` : "";
+      h += `<g data-i="${i}"><line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" style="stroke-width:${lw}${m}"/><circle cx="${a[0]}" cy="${a[1]}" r="${lw * 2}" style="${m.slice(1)}"/></g>`;
     });
     h += `</svg>`;
     P.items.forEach((it) => {
@@ -324,15 +344,15 @@
     });
     P.items.forEach((it, i) => {
       const [x0, y0, x1, y1] = it.label_box, s = it.sym_box, m = Math.max(1, P.fs * 0.25);
-      h += labelHtml(P, it, `left:${(x0 + x1) / 2}px;top:${(y0 + y1) / 2}px`, ` data-i="${i}"`) +
+      h += labelHtml(P, it, `left:${(x0 + x1) / 2}px;top:${(y0 + y1) / 2}px${P.mau[i] ? `;--lbl-border:${P.mau[i]}` : ""}`, ` data-i="${i}"`) +
         `<div class="hit" data-i="${i}" style="left:${s[0] - m}px;top:${s[1] - m}px;width:${s[2] - s[0] + 2 * m}px;height:${s[3] - s[1] + 2 * m}px"></div>
          <div class="hit" data-i="${i}" style="left:${x0}px;top:${y0}px;width:${x1 - x0}px;height:${y1 - y0}px"></div>`;
     });
     stage.innerHTML = h;
     cv.prepend(stage);
     const nBang = bangIpTu();
-    $("#lbl-demo").innerHTML = `<div class="lbl-demo-r">${lblBase}</div>` + (nBang ? `<div class="lbl-demo-r"><div class="ip-tu mau" style="--fs:12px"><div class="h">Trong tủ</div>
-      <div class="r"><i class="proc"></i><b>Mã nhãn</b><span>Địa chỉ IP</span></div></div> IP thiết bị trong tủ rack</div>` : "");
+    $("#lbl-demo").innerHTML = `<div class="lbl-demo-r">${lblBase}</div>` + (nBang ? `<div class="lbl-demo-r cot"><div class="ip-tu kp-tu rk-the mau" style="--fs:12px"><div class="h">Tủ …</div>
+      <div class="r"><i class="proc"></i><b>Mã nhãn</b><span>Địa chỉ IP</span></div></div> thẻ tủ: thiết bị trong tủ – bấm để mở tủ</div>` : "");
     $$(".hit", stage).forEach((el) => {
       el.addEventListener("mouseenter", () => { if (!(gest && gest.moved)) { clearTimeout(closeT); openLens(+el.dataset.i, false); } });
       el.addEventListener("mouseleave", scheduleClose);
@@ -351,60 +371,131 @@
     const xs = [...R.units, ...R.ngoai_u].filter((x) => x.ma && x.ip);
     return xs.sort((a, b) => (a.nhom === "proc" ? 0 : 1) - (b.nhom === "proc" ? 0 : 1));
   }
+  /* Thẻ tủ KNX (18/11/2026; chủ dự án chỉnh 19/11/2026 theo ảnh mẫu): module KNX gom vào tủ – trên mặt bằng chỉ còn biểu tượng tủ.
+     Thẻ "Tủ T1-KP0x" (mỗi dòng: mã module + model; dòng cuối: phụ kiện) đặt BÊN NGOÀI khối nhà, mũi tên cam nét đứt từ ký hiệu tủ
+     tới thẻ. Click thẻ → mở khung tủ KNX. */
+  function theKnx(T) {
+    return `<div class="h">Tủ ${esc(T.ma)}</div>` + T.module.map((m) =>
+      `<div class="r"><i style="background:${kpLoai(m.model)[2]}"></i><b>${esc(m.ma)}</b><span>${esc(m.model)}</span></div>`).join("")
+      + `<div class="f">+ ${T.phu_kien.map((x) => esc(x.ten)).join(" · ")}</div>`;
+  }
+  // Đặt thẻ ngoài khối nhà (chủ dự án 19/11/2026): khối nhà = P.khoi_nha (khung bao nét bản vẽ, chuan_bi_ban_mau.khoi_nha).
+  // Thử 4 phía (trái / phải / trên / dưới), thẻ thẳng hàng với tủ rồi dời dọc cạnh (thẻ so le, mũi tên kẻ xéo được).
+  // LOẠI chỗ mà thẻ đè hoặc mũi tên đi qua / sát (< 1 cỡ chữ) ký hiệu, nhãn thiết bị khác hay thẻ đã đặt (vd. T1-KP01 phía Nam
+  // cắt T1-SW08, T1-SW10). Trong các chỗ còn lại chọn điểm thấp nhất = độ dài mũi tên + phạt khi thẻ gần nhãn / thẻ khác
+  // (< 3 cỡ chữ: loại; 3–8 cỡ chữ: phạt) + phạt theo số thiết bị quanh thẻ (bán kính 12 cỡ chữ + nửa bề rộng thẻ) + phạt mũi tên
+  // dài quá 20 cỡ chữ. Vd. T1-KP02 phía Đông sát T1-DC02, T1-BL02 → phía Bắc; chủ dự án 19/11/2026: thẻ phải tránh xa nhãn khác,
+  // đặt vào khoảng trống cho mặt bằng cân đối; thẻ so le, mũi tên kẻ xéo được. Thẻ được tràn sang vùng chú giải gốc bên phải (trên web vùng này chỉ là nền trơn, .clip).
+  // Trả về { B: khung thẻ, p: điểm đầu mũi tên trên ký hiệu tủ, q: điểm cuối trên thẻ }.
+  function datTheKnx(it, el, daDat, daDay = []) {
+    const N = P.khoi_nha || P.items.reduce((b, x) => [x.sym_box, x.label_box].reduce((c, s) =>
+      [Math.min(c[0], s[0]), Math.min(c[1], s[1]), Math.max(c[2], s[2]), Math.max(c[3], s[3])], b), [1e9, 1e9, -1e9, -1e9]);
+    const w = el.offsetWidth, h = el.offsetHeight, g = P.fs * 3, S = it.sym_box, m = P.fs * 0.3;
+    const cx = (S[0] + S[2]) / 2, cy = (S[1] + S[3]) / 2;
+    const goc = P.items.filter((x) => x !== it).flatMap((x) => [x.sym_box, x.label_box]);
+    const vat = goc.map((b) => [b[0] - m, b[1] - m, b[2] + m, b[3] + m]);
+    const vatDay = goc.map((b) => [b[0] - P.fs, b[1] - P.fs, b[2] + P.fs, b[3] + P.fs]);       // mũi tên giữ cách ≥ 1 cỡ chữ
+    const kc = (A, b) => Math.hypot(Math.max(0, b[0] - A[2], A[0] - b[2]), Math.max(0, b[1] - A[3], A[1] - b[3]));
+    const SAT = P.fs * 3, XA = P.fs * 8, VUNG = P.fs * 12, DAI = P.fs * 20;   // sát (loại) · gần (phạt) · vùng đếm · mũi tên dài
+    const tam = P.items.filter((x) => x !== it).map((x) => [(x.sym_box[0] + x.sym_box[2]) / 2, (x.sym_box[1] + x.sym_box[3]) / 2]);
+    const giao = (A, b) => A[0] < b[2] && A[2] > b[0] && A[1] < b[3] && A[3] > b[1];
+    const cat2Doan = (a, b, c, d) => {             // hai đoạn a→b, c→d cắt nhau (kể cả chạm nhau)
+      const k = (p, q, r) => (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0]);
+      return k(a, b, c) * k(a, b, d) <= 0 && k(c, d, a) * k(c, d, b) <= 0;
+    };
+    const catDoan = (p, q, b) => {                 // đoạn p→q có đi qua hình chữ nhật b? (lấy mẫu dày theo cỡ chữ nhãn)
+      const n = Math.max(2, Math.ceil(Math.hypot(q[0] - p[0], q[1] - p[1]) / (P.fs * 0.25)));
+      for (let k = 0; k <= n; k++) {
+        const x = p[0] + (q[0] - p[0]) * k / n, y = p[1] + (q[1] - p[1]) * k / n;
+        if (x > b[0] && x < b[2] && y > b[1] && y < b[3]) return true;
+      }
+      return false;
+    };
+    const canh = [{ x: N[0] - g - w, y: cy - h / 2, doc: 1 }, { x: N[2] + g, y: cy - h / 2, doc: 1 },
+      { x: cx - w / 2, y: N[1] - g - h, doc: 0 }, { x: cx - w / 2, y: N[3] + g, doc: 0 }];
+    let tot = null;
+    for (const c of canh) {
+      for (let k = 0; k < 21; k++) {
+        const dd = (k % 2 ? 1 : -1) * Math.ceil(k / 2) * ((c.doc ? h : w) / 3);
+        const x = c.doc ? c.x : clamp(c.x + dd, 2, P.w - 2 - w), y = c.doc ? clamp(c.y + dd, 2, P.h - 2 - h) : c.y;
+        const B = [x, y, x + w, y + h];
+        if (x < 2 || y < 2 || B[2] > P.w - 2 || B[3] > P.h - 2) continue;
+        const Bn = [B[0] - g / 3, B[1] - g / 3, B[2] + g / 3, B[3] + g / 3];
+        if (vat.some((o) => giao(Bn, o)) || daDat.some((o) => giao(Bn, o))) continue;
+        const mx = (B[0] + B[2]) / 2, my = (B[1] + B[3]) / 2;
+        const p = [clamp(mx, S[0], S[2]), clamp(my, S[1], S[3])], q = [clamp(p[0], B[0], B[2]), clamp(p[1], B[1], B[3])];
+        if (vatDay.some((o) => catDoan(p, q, o)) || daDat.some((o) => catDoan(p, q, o))) continue;
+        // 19/11/2026 (tab Tủ): dây mới không cắt dây đã đặt; dây đã đặt không đi qua thẻ mới
+        if (daDay.some(([a, b]) => cat2Doan(p, q, a, b) || catDoan(a, b, Bn))) continue;
+        const gan = Math.min(XA, ...goc.map((o) => kc(B, o)), ...daDat.map((o) => kc(B, o)));
+        if (gan < SAT) continue;                                  // thẻ sát nhãn / thẻ khác: loại
+        const day = tam.filter((t) => Math.hypot(t[0] - mx, t[1] - my) < VUNG + w / 2).length;   // thẻ nên nằm ở khoảng trống
+        const dai = Math.hypot(q[0] - p[0], q[1] - p[1]);
+        const L = dai + Math.max(0, dai - DAI) * 2 + (XA - gan) * 3 + day * 15;
+        if (!tot || L < tot.L) tot = { B, p, q, L };
+      }
+    }
+    return tot;
+  }
+  /* Màu riêng cho tủ đặt sát nhau (chủ dự án 19/11/2026: "màu thẻ và màu nhãn của 2 tủ này khác biệt nhau"; "đổi màu xanh dương thành
+     màu xanh lá cây, ký hiệu tủ cũng đổi màu luôn"). Màu chọn ở bước dựng dữ liệu (chuan_bi_ban_mau.mau_tu_sat, trường it.mau) để ký
+     hiệu tủ trên ảnh nền cùng màu: T1-KP01 / T1-RK01 cam, T1-KP02 / T1-RK02 xanh lá. Thẻ, dây, "cục u", khung nhãn mã theo màu này;
+     tủ đứng riêng: kiểu cũ (thẻ cam, nhãn xanh ngọc). Trả về { chỉ số item: màu }. */
+  const mauTuSat = () => Object.fromEntries(P.items.map((it, i) => [i, it.mau]).filter(([, m]) => m));
+  // Thẻ tủ rack (tab Tủ, 19/11/2026): cùng kiểu thẻ tủ KNX – "Tủ T1-RK01" + thiết bị trong tủ có IP (PA2, duyệt 17/11/2026)
+  function theRack(R) {
+    return `<div class="h">Tủ ${esc(R.ma)}</div>` + tbCoIp(R).map((x) =>
+      `<div class="r"><i class="${x.nhom}"></i><b>${esc(x.ma)}</b><span>${esc(x.ip)}</span></div>`).join("")
+      + `<div class="f">${esc(R.loai)}</div>`;
+  }
+  /* Thẻ tủ trên tab "Tủ Rack & Tủ KNX": mọi tủ (rack, KNX) có thẻ đặt ngoài khối nhà (datTheKnx), dây nét đứt cam + "cục u" ở mép thẻ.
+     Click thẻ → mở khung tủ. Trả về số thẻ (mẫu thẻ ở cột trái). */
   function bangIpTu() {
-    let so = 0;
-    const svg = $("svg", stage), obs = [];
-    const nong = (b, m) => [b[0] - m, b[1] - m, b[2] + m, b[3] + m];          // chừa khoảng cách quanh vật cản
-    P.items.forEach((it) => { obs.push(nong(it.label_box, P.fs * 0.4), nong(it.sym_box, P.fs * 0.4)); });
-    (P.phu || []).forEach((x) => obs.push(nong(x.box, P.fs * 0.4)));
-    const placed = [];
-    P.items.forEach((it, i) => {
-      const R = it.loai === "RK" && TU[it.ma];
-      const xs = R ? tbCoIp(R) : [];
-      if (!xs.length) return;
+    const svg = $("svg", stage), theDat = [], dayDat = [];
+    P.fitRun = P.fit.slice();
+    // thẻ tủ rack (lớn, nhiều dòng) đặt trước, thẻ tủ KNX đặt sau – thẻ nhỏ dễ tìm chỗ quanh thẻ lớn
+    const thuTu = P.items.map((it, i) => i).sort((a, b) => (P.items[a].loai === "RK" ? 0 : 1) - (P.items[b].loai === "RK" ? 0 : 1) || a - b);
+    thuTu.forEach((i) => {
+      const it = P.items[i];
+      const R = it.loai === "RK" && TU[it.ma], K = it.loai === "KP" && TUK[it.ma];
+      if (!R && !K) return;
       const el = document.createElement("div");
-      el.className = "ip-tu";
+      el.className = K ? "ip-tu kp-tu" : "ip-tu kp-tu rk-the";
       el.dataset.i = i;
       el.style.setProperty("--fs", P.fs + "px");
-      el.innerHTML = `<div class="h">Trong tủ ${esc(R.ma)}</div>` + xs.map((x) =>
-        `<div class="r"><i class="${x.nhom}"></i><b>${esc(x.ma)}</b><span>${esc(x.ip)}</span></div>`).join("");
+      if (P.mau[i]) el.style.setProperty("--mau-the", P.mau[i]);      // tủ sát tủ khác: thẻ, dây, nhãn cùng 1 màu riêng
+      el.innerHTML = K ? theKnx(K) : theRack(R);
       stage.appendChild(el);
-      const w = el.offsetWidth, hh = el.offsetHeight, g = P.fs * 0.8;
-      const L = it.label_box, S = it.sym_box;
-      const U = [Math.min(L[0], S[0]), Math.min(L[1], S[1]), Math.max(L[2], S[2]), Math.max(L[3], S[3])];
-      const cx = (U[0] + U[2]) / 2, cy = (U[1] + U[3]) / 2;
-      const cand = [];
-      for (const d of [g, 3 * g, 6 * g, 10 * g]) {
-        for (const f of [0, -0.5, 0.5, -1, 1]) {
-          cand.push([cx - w / 2 + f * w, U[3] + d], [cx - w / 2 + f * w, U[1] - d - hh],      // dưới, trên
-            [U[0] - d - w, cy - hh / 2 + f * hh], [U[2] + d, cy - hh / 2 + f * hh]);         // trái, phải
-        }
-      }
-      const area = (a, b) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
-      let best = null;
-      cand.forEach(([x, y], k) => {
-        const B = [x, y, x + w, y + hh];
-        if (B[0] < 2 || B[1] < 2 || B[2] > P.clip_x1 - 4 || B[3] > P.h - 2) return;
-        const s = [...obs, ...placed].reduce((a, o) => a + area(B, o), 0) + k * 0.01;   // ưu tiên chỗ gần, thứ tự dưới/trên/trái/phải
-        if (!best || s < best.s) best = { s, B };
-      });
-      if (!best) { el.remove(); return; }
-      const B = best.B;
-      placed.push(B);
+      const T = datTheKnx(it, el, theDat, dayDat) || datTheKnx(it, el, theDat);   // không còn chỗ: cho dây cắt dây khác (không bỏ thẻ)
+      if (!T) { el.remove(); return; }
+      const B = T.B;
+      theDat.push(B);
+      dayDat.push([T.p, T.q]);
       el.style.left = B[0] + "px";
       el.style.top = B[1] + "px";
-      // dây dẫn: từ cạnh tủ (ký hiệu/khung + nhãn) gần nhất tới cạnh bảng gần nhất – không chạy xuyên cụm thiết bị
-      const px = clamp(clamp(cx, B[0], B[2]), U[0], U[2]), py = clamp(clamp(cy, B[1], B[3]), U[1], U[3]);
-      const qx = clamp(px, B[0], B[2]), qy = clamp(py, B[1], B[3]);
+      P.fitRun = [Math.min(P.fitRun[0], B[0] - P.fs), Math.min(P.fitRun[1], B[1] - P.fs),
+        Math.max(P.fitRun[2], B[2] + P.fs), Math.max(P.fitRun[3], B[3] + P.fs)];
+      const [px, py] = T.p, [qx, qy] = T.q;                              // ký hiệu tủ → cạnh thẻ gần nhất
       const ln = document.createElementNS("http://www.w3.org/2000/svg", "line");
-      Object.entries({ x1: px, y1: py, x2: qx, y2: qy, class: "ip-tu-day", "data-i": i }).forEach(([k, v]) => ln.setAttribute(k, v));
-      ln.style.strokeWidth = Math.max(0.3, P.fs * 0.09);
+      Object.entries({ x1: px, y1: py, x2: qx, y2: qy, class: "ip-tu-day kp", "data-i": i }).forEach(([k, v]) => ln.setAttribute(k, v));
+      const lw = Math.max(0.4, P.fs * 0.13);
+      ln.style.strokeWidth = lw;
+      if (P.mau[i]) ln.style.stroke = P.mau[i];
       svg.appendChild(ln);
-      el.addEventListener("click", (e) => { e.stopPropagation(); openRack(it.ma); });
+      // "cục u" ở mép thẻ (chủ dự án 19/11/2026, theo layout K-BUS S-HOUSE): nửa hình tròn đặc, tâm tại điểm dây chạm mép thẻ,
+      // phồng ra ngoài thẻ. n = pháp tuyến hướng ra ngoài của cạnh thẻ chứa điểm chạm; t = tiếp tuyến dọc cạnh.
+      const n = qy <= B[1] + 0.01 ? [0, -1] : qy >= B[3] - 0.01 ? [0, 1] : qx <= B[0] + 0.01 ? [-1, 0] : [1, 0];
+      const r = lw * 3.5, t = [-n[1], n[0]];
+      const u = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      u.setAttribute("d", `M${qx + r * t[0]} ${qy + r * t[1]}A${r} ${r} 0 0 0 ${qx - r * t[0]} ${qy - r * t[1]}Z`);
+      u.setAttribute("class", "ip-tu-u");
+      u.dataset.i = i;
+      if (P.mau[i]) u.style.fill = P.mau[i];
+      svg.appendChild(u);
+      el.addEventListener("click", (e) => { e.stopPropagation(); if (K) openKnx(it.ma); else openRack(it.ma); });
       el.addEventListener("pointerdown", (e) => e.stopPropagation());
-      so++;
     });
-    return so;
+    return theDat.length;
   }
 
   /* ================= lọc theo loại thiết bị (chọn hình trong khung ⋮⋮⋮ hoặc dòng trong khung chú giải +) =================
@@ -418,21 +509,22 @@
   function applyFilter() {
     if (!stage) return;
     const F = filter[planTab] || null, chip = $("#loc-chip");
-    const all = [...P.items.map((it) => ({ loai: it.loai, b: it.sym_box })), ...(P.phu || []).map((x) => ({ loai: x.loai, b: x.box }))];
-    P.items.forEach((it, i) => $$(`[data-i="${i}"]`, stage).forEach((e) => e.classList.toggle("an", !!F && !F.has(it.loai))));
+    const all = [...P.items.map((it) => ({ loai: it.loai, trong: it.loai_trong, b: it.sym_box })), ...(P.phu || []).map((x) => ({ loai: x.loai, b: x.box }))];
+    const qua = (x) => quaLoc(F, x.loai, x.trong);
+    P.items.forEach((it, i) => $$(`[data-i="${i}"]`, stage).forEach((e) => e.classList.toggle("an", !quaLoc(F, it.loai, it.loai_trong))));
     let h = "";
     if (F) {
       const pos = (b) => `left:${b[0] - PAD_LOC}px;top:${b[1] - PAD_LOC}px;width:${b[2] - b[0] + 2 * PAD_LOC}px;height:${b[3] - b[1] + 2 * PAD_LOC}px`;
-      for (const x of all) if (!F.has(x.loai)) h += `<div class="loc-che" style="${pos(x.b)}"></div>`;
+      for (const x of all) if (!qua(x)) h += `<div class="loc-che" style="${pos(x.b)}"></div>`;
       // ký hiệu được chọn vẽ lại trên lớp che (khi nằm sát ký hiệu bị ẩn)
-      for (const x of all) if (F.has(x.loai)) h += `<div class="loc-hien" style="${pos(x.b)};background-image:url(${P.img});
+      for (const x of all) if (qua(x)) h += `<div class="loc-hien" style="${pos(x.b)};background-image:url(${P.img});
         background-size:${P.w}px ${P.h}px;background-position:${PAD_LOC - x.b[0]}px ${PAD_LOC - x.b[1]}px"></div>`;
     }
     $(".loc-layer", stage).innerHTML = h;
     cv.classList.toggle("dang-loc", !!F);
     if (!F) { chip.hidden = true; return; }
-    const n = all.filter((x) => F.has(x.loai)).length;
-    const vang = [...F].filter((c) => !all.some((x) => x.loai === c));
+    const n = all.filter(qua).length;
+    const vang = [...F].filter((c) => !all.some((x) => x.loai === c || (x.trong || []).includes(c)));
     chip.innerHTML = `<span>Đang lọc:</span>${[...F].map((c) => `<b>${esc(c)}</b>`).join("")}
       <span class="n">${n}/${all.length} ký hiệu</span><button type="button" id="loc-bo" title="Hiện tất cả (phím Space)">Hiện tất cả</button>${
       vang.length ? `<small>${vang.map(esc).join(", ")}: ${vang.some((c) => P.dai_anh.some((g) => g.items.some((i) => i.ma === c)))
@@ -469,11 +561,11 @@
       width: cv.clientWidth / view.z * s + "px", height: cv.clientHeight / view.z * s + "px" });
   }
   const fitZoom = () => {
-    const f = P.fit;
+    const f = P.fitRun || P.fit;
     return Math.max(0.05, Math.min(cv.clientWidth / (f[2] - f[0]), cv.clientHeight / (f[3] - f[1])) * 0.96);
   };
   function fit() {
-    const f = P.fit, z = fitZoom();
+    const f = P.fitRun || P.fit, z = fitZoom();
     view.z = z;
     view.tx = (cv.clientWidth - (f[2] - f[0]) * z) / 2 - f[0] * z;
     view.ty = (cv.clientHeight - (f[3] - f[1]) * z) / 2 - f[1] * z;
@@ -591,7 +683,7 @@
         background-size:${P.w * z * k}px ${P.h * z * k}px;background-position:${-g[0] * z * k}px ${-g[1] * z * k}px">
         <svg width="${gw}" height="${gh}"><line x1="${L(a[0])}" y1="${T(a[1])}" x2="${L(b[0])}" y2="${T(b[1])}"
           stroke="var(--leader)" stroke-width="${lw * z * k}"/><circle cx="${L(a[0])}" cy="${T(a[1])}" r="${lw * 2 * z * k}" fill="var(--leader)"/></svg>
-        ${labelHtml(P, it, `left:${L((l[0] + l[2]) / 2)}px;top:${T((l[1] + l[3]) / 2)}px;transform:translate(-50%,-50%) scale(${(z * k).toFixed(2)})`)}</div>
+        ${labelHtml(P, it, `left:${L((l[0] + l[2]) / 2)}px;top:${T((l[1] + l[3]) / 2)}px;transform:translate(-50%,-50%) scale(${(z * k).toFixed(2)})${P.mau && P.mau[i] ? `;--lbl-border:${P.mau[i]}` : ""}`)}</div>
       <div class="lens-foot"><span></span><i></i></div>`;
     cv.appendChild(el);
     lens = { i, el, pinned: false, hover: false };
@@ -802,18 +894,100 @@
       apply();
     }
   }
-  const moTu = (i) => (P.items[i].loai === "RK" && TU[P.items[i].ma] ? (openRack(P.items[i].ma), true) : false);
+  const moTu = (i) => (P.items[i].loai === "RK" && TU[P.items[i].ma] ? (openRack(P.items[i].ma), true)
+    : P.items[i].loai === "KP" && TUK[P.items[i].ma] ? (openKnx(P.items[i].ma), true) : false);
 
-  /* ================= tìm kiếm (5 bộ mặt bằng) ================= */
-  const ALL = PLAN_TABS.flatMap((t) => MB[t].flatMap((p, pi) => p.items.map((it, i) => ({
-    ma: it.ma, ip: it.ip, t, pi, i, kv: `${INFO[t].ten} · ${p.khu_vuc}${isTrunking(p) ? " · trunking" : ""}` }))));
-  for (const R of D.tu_rack || []) {
-    const t = R.he === "camera" ? "camera" : "tel";
-    MB[t].forEach((p, pi) => p.items.forEach((it, i) => {
-      if (it.ma !== R.ma) return;
-      for (const x of [...R.units, ...R.ngoai_u]) if (x.ma) ALL.push({ ma: x.ma, ip: x.ip, khong_ip: x.khong_ip, t, pi, i, rk: R.ma, kv: `Trong tủ ${R.ma} · ${p.khu_vuc}` });
+  /* ================= tủ KNX: khung "mặt trước tủ (thanh DIN) + danh sách module" (18/11/2026, Tầng 1 trước) =================
+     Dữ liệu D.tu_knx (thiet_bi_khac/tu_knx.py). Chạm / click biểu tượng tủ (tab Tủ Rack & Tủ KNX) hoặc tìm mã T1-KP.. → mở khung bên phải
+     (điện thoại: trượt lên từ cạnh dưới). Mặt trước tủ là MINH HOẠ: độ rộng module ước lượng theo số module DIN, chưa theo
+     kích thước thật. Bấm dòng module → phóng tới module đó trên mặt bằng (khung tủ vẫn mở). */
+  const TUK = Object.fromEntries((D.tu_knx || []).map((t) => [t.ma, t]));
+  const KP_LOAI = [["ARCD", "Switch actuator", "#f2a11c", 8, "Đóng cắt 8 kênh 16A, đo dòng"],
+    ["AMMA-08", "Actuator", "#34d1bc", 8, "Actuator 8 kênh 10A"], ["AMMA-04", "Actuator", "#34d1bc", 4, "Actuator 4 kênh 6A"],
+    ["CTBIF", "Universal input", "#a897ff", 4, "Ngõ vào 8 kênh"],
+    ["BBPS", "Bộ nguồn KNX", "#ef6b5b", 4, "Bộ nguồn bus KNX 640 mA"], ["BTDG", "Gateway KNX/DALI", "#5fb0ff", 4, "Gateway KNX/DALI"]];   // TH-KP01 (19/11/2026)
+  const kpLoai = (model) => KP_LOAI.find((k) => model.startsWith(k[0])) || ["", "", "#6b778a", 4, ""];
+  const KP_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2.5" width="16" height="19" rx="1.5"/><path d="M6.5 8.5h11M6.5 15.5h11"/><path d="M8 7v3M12 7v3M16 7v3M8 14v3M12 14v3M16 14v3" stroke-width="2.6"/></svg>';
+  function openKnx(ma, chon = "") {
+    const T = TUK[ma];
+    if (!T) return;
+    closeRack();
+    closeLens();
+    const dt = matchMedia("(max-width: 760px)").matches;
+    // mặt trước: hàng 1 = MCB 2P + module đầu tiên (như ảnh tủ A), sau đó xếp lần lượt, mỗi hàng tối đa 12 module DIN
+    const khoi = [{ ma: "", ten: "MCB 2P", w: 2, mau: "#6b778a", phu: 1 }, ...T.module.map((m) => {
+      const k = kpLoai(m.model);
+      return { ma: m.ma, ten: m.model, w: k[3], mau: k[2] };
+    })];
+    const hang = [];
+    for (const b of khoi) {
+      const h = hang[hang.length - 1];
+      if (h && h.reduce((s, x) => s + x.w, 0) + b.w <= 12 && !(hang.length === 1 && h.length >= 2)) h.push(b); else hang.push([b]);
+    }
+    const plate = hang.map((h) => `<div class="kp-rail">${h.map((b) =>
+      `<div class="kp-m${b.phu ? " phu" : ""}${b.ma && b.ma === chon ? " chon" : ""}" data-ma="${esc(b.ma)}" style="flex:0 0 ${b.w * 100 / 12}%;--c:${b.mau}" title="${esc(b.ten)}">
+         <b>${esc(b.ma || b.ten)}</b>${b.ma ? `<span>${esc(b.ten)}</span>` : ""}</div>`).join("")}</div>`).join("")
+      + `<div class="kp-bar">Thanh nối đất / trung tính</div>`;
+    const mods = T.module.map((m) => {
+      const k = kpLoai(m.model);
+      return `<div class="rk-it kp-it${m.ma === chon ? " chon" : ""}" data-ma="${esc(m.ma)}"><span class="m">${esc(m.ma)}</span><span class="n">${esc(m.ten)}</span>
+        <span class="u">${esc(m.ky_hieu)}</span><span class="d"><i style="background:${k[2]}"></i>${esc(m.model)} · ${esc(k[1])}</span></div>`;
+    }).join("");
+    const phu = T.phu_kien.map((x) => `<div class="rk-it"><span class="m no">—</span><span class="n">${esc(x.ten)}</span><span class="u"></span>
+        <span class="d">${esc(x.ghi_chu)}</span></div>`).join("");
+    const xacNhan = T.trang_thai.startsWith("Đối tác");
+    const coNguon = T.module.some((m) => m.model.startsWith("BBPS"));          // TH-KP01: bộ nguồn + gateway của cả công trình
+    const el = document.createElement("div");
+    el.className = "rk-dr kp-dr";
+    el.innerHTML = `<div class="rk-h"><div class="rk-ico kp-ico">${KP_ICON}</div><div><div class="ma">${esc(T.ma)}</div>
+        <div class="sub">Tủ KNX · Control · ${esc(T.khu_vuc)} · ${T.ten_doi_tac ? `<b>${esc(T.ten_doi_tac)}</b> theo đối tác${T.nhan_anh ? ` (nhãn “${esc(T.nhan_anh)}”)` : ""}` : "<b>dự kiến</b> – chờ đối tác xác nhận"}</div></div>
+        <button class="x" type="button" aria-label="Đóng">×</button></div>
+      <div class="rk-tags"><span class="${xacNhan ? "kp-ok" : "kp-du"}">${xacNhan ? "Module trong tủ: đối tác xác nhận" : "Module trong tủ: dự đoán"}</span>
+        <span>Vị trí: dự đoán</span>${T.canh_tu_dien ? `<span>Cạnh tủ điện <b>${esc(T.canh_tu_dien)}</b></span>`
+          : `<span>Đặt trong <b>${esc(T.noi_dat)}</b></span>`}
+        <span><b>${T.module.length}</b> module KNX</span><span>Không có IP · ${coNguon ? "<b>có bộ nguồn bus KNX</b>" : "không có bộ nguồn"}</span></div>
+      <div class="rk-b">
+        <div class="rk-el kp-el"><div class="t">Mặt trước tủ · minh hoạ</div><div class="kp-plate">${plate}</div>
+          <div class="kp-note">Độ rộng module ước lượng, chưa theo kích thước thật.</div>
+          ${T.anh ? `<figure class="kp-anh"><img src="${T.anh}" alt="Ảnh tủ ${esc(T.ten_doi_tac)}"><figcaption>Ảnh ${esc(T.ten_doi_tac)} – đối tác gửi</figcaption></figure>`
+            : T.ten_doi_tac ? "" : `<div class="kp-note">Chưa có ảnh tủ – tủ dự kiến, chưa có thông tin từ đối tác.</div>`}</div>
+        <div class="rk-ds"><div class="rk-g"><h5><i style="background:#ffd84d"></i>Module KNX <em>${T.module.length}</em></h5>${mods}
+          <div class="kp-hint">Module lắp trong tủ – không có ký hiệu riêng trên mặt bằng.</div></div>
+          <div class="rk-g"><h5><i style="background:#6b778a"></i>Phụ kiện tủ <em>${T.phu_kien.length}</em></h5>${phu}</div></div>
+      </div>
+      <div class="rk-f"><b>Vị trí:</b> ${esc(T.vi_tri)}.<br><b>Phục vụ:</b> ${esc(T.phuc_vu)}.<ul>${T.ghi_chu.map((s) => `<li>${esc(s)}</li>`).join("")}</ul></div>`;
+    el.querySelector(".x").addEventListener("click", closeRack);
+    ["pointerdown", "wheel"].forEach((ev) => el.addEventListener(ev, (e) => e.stopPropagation()));
+    cv.appendChild(el);
+    tuMo = el;
+    const dich = (k, z) => {          // đưa phần tử k của mặt bằng vào giữa phần còn nhìn thấy (bên trái / phía trên khung tủ)
+      const s = P.items[k].sym_box, l = P.items[k].label_box;
+      const cx = (Math.min(s[0], l[0]) + Math.max(s[2], l[2])) / 2, cy = (Math.min(s[1], l[1]) + Math.max(s[3], l[3])) / 2;
+      const W = dt ? cv.clientWidth : cv.clientWidth - el.offsetWidth - 80, H = dt ? cv.clientHeight - el.offsetHeight : cv.clientHeight;
+      view.z = clamp(z, 0.2, MAX_Z);
+      view.tx = W / 2 - cx * view.z;
+      view.ty = H / 2 - cy * view.z;
+      apply();
+    };
+    $$(".kp-it", el).forEach((r) => r.addEventListener("click", () => {     // tô dòng + khối module tương ứng trên mặt trước tủ
+      $$(".kp-it, .kp-m", el).forEach((x) => x.classList.toggle("chon", x.dataset.ma === r.dataset.ma));
     }));
+    const hl = el.querySelector(".kp-it.chon");
+    if (hl) hl.scrollIntoView({ block: "nearest" });
+    const k = P.items.findIndex((it) => it.ma === ma);
+    if (k >= 0) dich(k, Math.max(view.z, 10 / P.fs));
   }
+
+  /* ================= tìm kiếm (6 bộ mặt bằng) ================= */
+  const ALL = PLAN_TABS.flatMap((t) => MB[t].flatMap((p, pi) => p.items.map((it, i) => ({
+    ma: it.ma, ip: it.ip, t, pi, i, kv: `${INFO[t].ten} · ${p.khu_vuc}${isTrunking(p) ? " · trunking" : ""}`
+      + (it.loai === "KP" ? " · tủ KNX" : it.loai === "RK" ? " · tủ rack" : "") }))));
+  // thiết bị trong tủ (module KNX, thiết bị tủ rack): mở tab Tủ, đúng tầng, mở khung tủ chứa nó
+  MB.tu.forEach((p, pi) => p.items.forEach((it, i) => {
+    const T = it.loai === "KP" && TUK[it.ma], R = it.loai === "RK" && TU[it.ma];
+    if (T) for (const m of T.module) ALL.push({ ma: m.ma, ip: "", t: "tu", pi, i, kp: T.ma, kv: `Trong tủ ${T.ma} · ${p.khu_vuc}` });
+    if (R) for (const x of [...R.units, ...R.ngoai_u]) if (x.ma) ALL.push({ ma: x.ma, ip: x.ip, khong_ip: x.khong_ip, t: "tu", pi, i, rk: R.ma, kv: `Trong tủ ${R.ma} · ${p.khu_vuc}` });
+  }));
   const top = $("#top"), input = $(".search input");
   const drop = document.createElement("div");
   drop.className = "drop"; drop.hidden = true;
@@ -864,9 +1038,9 @@
     showTab(x.t);
     if (cur !== x.pi) loadPlan(x.pi);
     const F = filter[x.t];
-    if (F && !F.has(P.items[x.i].loai)) clearFilter();
+    if (F && !quaLoc(F, P.items[x.i].loai, P.items[x.i].loai_trong)) clearFilter();
     focusOn(x.i);
-    if (x.rk) openRack(x.rk, x.ma); else moTu(x.i);
+    if (x.rk) openRack(x.rk, x.ma); else if (x.kp) openKnx(x.kp, x.ma); else moTu(x.i);
     history.replaceState(null, "", "#ma=" + encodeURIComponent(x.ma));
   }
   function focusOn(i) {
@@ -892,8 +1066,8 @@
 
   /* phím tắt – CHỈ MÁY TÍNH (có chuột, màn hình > 760px), không có trên điện thoại (chủ dự án đổi phím 16/11/2026):
      - A / D: tab bên trái / bên phải, chạy vòng (Tổng quan ←A→ Lưu ý).
-     - W / S: mặt bằng phía trên / phía dưới trong danh sách bên trái (chỉ ở 5 tab mặt bằng), chạy vòng qua cả danh sách
-       – tab Ổ cắm: "Mặt bằng ổ cắm & tủ điện" Tầng 4 ←S→ "Mặt bằng trunking – tủ điện" Tầng hầm, và trunking Tầng 4 ←S→ ổ cắm Tầng hầm.
+     - W / S: mặt bằng phía trên / phía dưới trong danh sách bên trái (chỉ ở 6 tab mặt bằng), chạy vòng qua cả danh sách
+       – vd. tab Ổ cắm: Tầng 4 ←S→ Tầng hầm (19/11/2026 bỏ 5 mặt bằng trunking – chỉ có tủ điện).
      Bộ gõ tiếng Việt kiểu Telex (Unikey, EVKey…) chạy cả khi không gõ vào ô chữ: khi cần đổi chữ, nó NUỐT phím vừa bấm,
      gửi Backspace rồi gửi chữ mới KHÔNG có mã phím. Ví dụ: "dd" → "đ", "aa" → "â", "w" → "ư", "as" → "á" (S là dấu sắc),
      "aw" → "ă"; bấm thêm lần nữa thì hoàn tác, gửi lại chữ thường ("ddd" → "dd"). Vì vậy:
@@ -971,7 +1145,7 @@
   /* Shift / Ctrl NHẤN RIÊNG (chủ dự án 18/11/2026): Shift = bấm nút + (chú giải), Ctrl = bấm nút ⋮⋮⋮ (hình thiết bị),
      y như click chuột – kể cả đóng ⋮⋮⋮ khi đã chọn hình thì mặt bằng chỉ còn loại đã chọn. Chỉ tính khi nhấn rồi nhả đúng phím đó
      mà KHÔNG kèm phím khác, click hay lăn chuột – nên Ctrl+C, Ctrl + lăn chuột, Shift + chữ hoa… vẫn như cũ.
-     Chỉ máy tính, chỉ ở 5 tab mặt bằng, bỏ qua khi đang gõ trong ô tìm kiếm / ô chọn. Bộ gõ Telex không đổi phím Shift / Ctrl. */
+     Chỉ máy tính, chỉ ở 6 tab mặt bằng, bỏ qua khi đang gõ trong ô tìm kiếm / ô chọn. Bộ gõ Telex không đổi phím Shift / Ctrl. */
   const NHAN_RIENG = { Shift: 0, Control: 1 };
   let rieng = null;                                   // { k: phím đang nhấn riêng } · { k: null } = đã bị huỷ (có kèm thao tác khác)
   const dangGo = (e) => e.target && e.target.closest && e.target.closest("input, textarea, select, [contenteditable]");
