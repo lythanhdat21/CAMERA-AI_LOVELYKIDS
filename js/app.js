@@ -437,10 +437,9 @@
     }
     return tot;
   }
-  /* Màu riêng cho tủ đặt sát nhau (chủ dự án 19/11/2026: "màu thẻ và màu nhãn của 2 tủ này khác biệt nhau"; "đổi màu xanh dương thành
-     màu xanh lá cây, ký hiệu tủ cũng đổi màu luôn"). Màu chọn ở bước dựng dữ liệu (chuan_bi_ban_mau.mau_tu_sat, trường it.mau) để ký
-     hiệu tủ trên ảnh nền cùng màu: T1-KP01 / T1-RK01 cam, T1-KP02 / T1-RK02 xanh lá. Thẻ, dây, "cục u", khung nhãn mã theo màu này;
-     tủ đứng riêng: kiểu cũ (thẻ cam, nhãn xanh ngọc). Trả về { chỉ số item: màu }. */
+  /* Màu tủ (tab Tủ, chủ dự án 19/11/2026): tủ rack …-RK… xanh lá, tủ KNX …-KP… cam – mọi tủ. Màu chọn ở bước dựng dữ liệu
+     (chuan_bi_ban_mau.mau_tu, trường it.mau) để ký hiệu tủ trên ảnh nền cùng màu; thẻ, dây, "cục u", khung nhãn mã theo màu này.
+     Trả về { chỉ số item: màu }. */
   const mauTuSat = () => Object.fromEntries(P.items.map((it, i) => [i, it.mau]).filter(([, m]) => m));
   // Thẻ tủ rack (tab Tủ, 19/11/2026): cùng kiểu thẻ tủ KNX – "Tủ T1-RK01" + thiết bị trong tủ có IP (PA2, duyệt 17/11/2026)
   function theRack(R) {
